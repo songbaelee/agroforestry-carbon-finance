@@ -204,7 +204,7 @@ const dot=m.status==="Positive"?"🟢":m.status==="Near break-even"?"🟡":"🔴
 statusEl.className=`status ${cls}`;
 statusEl.innerHTML=`<div class="label">Project status</div><div class="status-main">${dot} ${m.status}</div><p>Cumulative position: <strong>${fmtMoney(m.totals.surplus)}</strong></p>`;
 const data={labels:m.rows.map(r=>`Year ${r.year}`),datasets:[{type:"bar",label:"Annual revenue",data:m.rows.map(r=>r.revenue),backgroundColor:"#059669",borderRadius:{topLeft:8,topRight:8}},{type:"bar",label:"Annual simple costs",data:m.rows.map(r=>r.costOutflow),backgroundColor:"#ea580c",borderRadius:{bottomLeft:8,bottomRight:8}},{type:"line",label:"Cumulative position",data:m.rows.map(r=>r.cumulative),borderColor:"#2563eb",backgroundColor:"#2563eb",borderWidth:4,pointRadius:0,tension:.3,pointStyle:"line"}]};
-const options={responsive:true,maintainAspectRatio:false,interaction:{mode:"index",intersect:false},plugins:{legend:{display:true,labels:{boxWidth:40,padding:10}}},layout:{padding:{top:0,bottom:0}},scales:{x:{grid:{color:"#e2e8f0"}},y:{ticks:{callback:(v)=>fmtMoney(v)},grid:{color:"#e2e8f0"}}}};
+const options={responsive:true,maintainAspectRatio:false,interaction:{mode:"index",intersect:false},plugins:{legend:{display:true,labels:{usePointStyle:true,boxWidth:40,padding:10}}},layout:{padding:{top:0,bottom:0}},scales:{x:{grid:{color:"#e2e8f0"}},y:{ticks:{callback:(v)=>fmtMoney(v)},grid:{color:"#e2e8f0"}}}};
 if(mainChart)mainChart.destroy();
 mainChart=new Chart(document.getElementById("mainChart"),{data,options});
 }
