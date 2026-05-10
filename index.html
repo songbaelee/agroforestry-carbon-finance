@@ -45,11 +45,11 @@ aside .card{margin-top:0 !important;margin-bottom:0}
 .mini-reset{padding:6px 8px;font-size:12px}
 input[type=range]{width:100%;accent-color:var(--green)}
 /* Project status card */
-.status{padding:22px}
+.status{padding:16px 22px}
 .status.negative{background:#fff1f2;border-color:#fecdd3;color:#881337}
 .status.near{background:#fffbeb;border-color:#fde68a;color:#78350f}
 .status.positive{background:#ecfdf5;border-color:#a7f3d0;color:#065f46}
-.status-main{font-size:22px;font-weight:800;margin-top:6px;line-height:1.15}
+.status-main{font-size:22px;font-weight:800;margin-top:4px;line-height:1.15}
 /* Summary stats beneath the chart */
 .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:20px}
 .stat{padding:18px}
@@ -109,11 +109,10 @@ li{margin-bottom:8px;line-height:1.6;color:var(--muted)}
 <!-- INPUT CONTROLS CARD -->
 <div class="card">
 <div class="toprow">
-<div><h2>Try changing</h2><p>How sensitive is the project to price and time?</p></div>
+<div><h2>Try changing</h2></div>
 <button onclick="resetAll()">Reset all</button>
 </div>
 <div id="controls"></div>
-<div class="note" style="margin-top:16px;">Click legend items to isolate variables.</div>
 </div>
 
 <!-- CONTEXT CARD -->
@@ -200,7 +199,7 @@ const cls=m.status==="Positive"?"positive":m.status==="Near break-even"?"near":"
 const dot=m.status==="Positive"?"🟢":m.status==="Near break-even"?"🟡":"🔴";
 statusEl.className=`status ${cls}`;
 statusEl.innerHTML=`<div class="label">Project status</div><div class="status-main">${dot} ${m.status}</div><p>Cumulative position: <strong>${fmtMoney(m.totals.surplus)}</strong></p>`;
-const data={labels:m.rows.map(r=>`Year ${r.year}`),datasets:[{type:"bar",label:"Annual revenue",data:m.rows.map(r=>r.revenue),backgroundColor:"#059669",borderRadius:{topLeft:8,topRight:8}},{type:"bar",label:"Annual simple costs",data:m.rows.map(r=>r.costOutflow),backgroundColor:"#ea580c",borderRadius:{bottomLeft:8,bottomRight:8}},{type:"line",label:"Cumulative position",data:m.rows.map(r=>r.cumulative),borderColor:"#2563eb",backgroundColor:"#2563eb",borderWidth:4,pointRadius:0,tension:.3}]};
+const data={labels:m.rows.map(r=>`Year ${r.year}`),datasets:[{type:"bar",label:"Annual revenue",data:m.rows.map(r=>r.revenue),backgroundColor:"#059669",borderRadius:{topLeft:8,topRight:8}},{type:"bar",label:"Annual simple costs",data:m.rows.map(r=>r.costOutflow),backgroundColor:"#ea580c",borderRadius:{bottomLeft:8,bottomRight:8}},{type:"line",label:"Cumulative position",data:m.rows.map(r=>r.cumulative),borderColor:"#2563eb",backgroundColor:"#2563eb",borderWidth:4,pointRadius:0,tension:.3,pointStyle:"line"}]};
 const options={responsive:true,maintainAspectRatio:false,interaction:{mode:"index",intersect:false},plugins:{legend:{display:true,labels:{boxWidth:40,padding:10}}},layout:{padding:{top:0,bottom:0}},scales:{x:{grid:{color:"#e2e8f0"}},y:{ticks:{callback:(v)=>fmtMoney(v)},grid:{color:"#e2e8f0"}}}};
 if(mainChart)mainChart.destroy();
 mainChart=new Chart(document.getElementById("mainChart"),{data,options});
