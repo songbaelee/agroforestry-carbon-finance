@@ -1,0 +1,348 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Agroforestry Carbon Finance Simulator</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --card: #ffffff;
+      --text: #0f172a;
+      --muted: #64748b;
+      --line: #e2e8f0;
+      --green: #059669;
+      --orange: #f97316;
+      --blue: #2563eb;
+      --amber-bg: #fffbeb;
+      --amber-text: #78350f;
+      --emerald-bg: #ecfdf5;
+      --emerald-text: #065f46;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+    .page {
+      max-width: 1240px;
+      margin: 0 auto;
+      padding: 32px 18px 48px;
+    }
+    .hero, .card, .stat, .lesson {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+    }
+    .hero { padding: 32px; margin-bottom: 18px; }
+    .badge {
+      display: inline-block;
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: var(--emerald-bg);
+      color: var(--emerald-text);
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+    h1 { font-size: clamp(32px, 5vw, 56px); line-height: 1.02; margin: 0; letter-spacing: -0.04em; }
+    h2 { font-size: 21px; margin: 0 0 6px; }
+    p { color: var(--muted); line-height: 1.65; font-size: 16px; }
+    .hero p { max-width: 820px; font-size: 18px; }
+    .toprow { display: flex; align-items: start; justify-content: space-between; gap: 20px; }
+    button {
+      border: 1px solid var(--line);
+      background: white;
+      padding: 10px 14px;
+      border-radius: 16px;
+      cursor: pointer;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin: 18px 0; }
+    .stat { padding: 18px; }
+    .label { color: var(--muted); font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; }
+    .value { font-size: 28px; font-weight: 850; margin-top: 4px; }
+    .note { color: var(--muted); font-size: 13px; line-height: 1.5; margin-top: 6px; }
+    .main { display: grid; grid-template-columns: 390px minmax(0, 1fr); gap: 20px; }
+    .card { padding: 22px; margin-bottom: 20px; }
+    .controls { position: sticky; top: 16px; align-self: start; }
+    .control { margin: 22px 0; }
+    .control-head { display: flex; justify-content: space-between; align-items: start; gap: 14px; margin-bottom: 8px; }
+    .control-title { font-weight: 750; font-size: 14px; }
+    .control-value { min-width: 96px; text-align: right; background: #f1f5f9; padding: 6px 10px; border-radius: 12px; font-weight: 800; font-size: 14px; }
+    input[type="range"] { width: 100%; accent-color: var(--green); }
+    .lessons { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 20px; }
+    .lesson {
+      background: var(--amber-bg);
+      border-color: #fde68a;
+      color: var(--amber-text);
+      padding: 18px;
+    }
+    .lesson-title { font-weight: 850; margin-bottom: 6px; }
+    .lesson p { color: var(--amber-text); margin: 0; font-size: 14px; }
+    .chart-wrap { height: 310px; }
+    .chart-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .footer-note { margin: 0; }
+    @media (max-width: 960px) {
+      .main { grid-template-columns: 1fr; }
+      .controls { position: static; }
+      .stats, .lessons, .chart-grid { grid-template-columns: 1fr; }
+      .toprow { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <section class="hero">
+      <div class="toprow">
+        <div>
+          <div class="badge">Stage 1: Interactive Financial Literacy</div>
+          <h1>How Trees on Farms Can Generate Carbon Revenue</h1>
+          <p>
+            Imagine a cooperative of 500 coffee farmers in Uganda planting shade trees alongside existing coffee farms.
+            This first model shows the simple engine, but keeps the economics deliberately cautious: trees take time,
+            costs arrive early, and revenue is not the same as profit.
+          </p>
+        </div>
+        <button onclick="resetInputs()">Reset assumptions</button>
+      </div>
+    </section>
+
+    <section class="stats">
+      <div class="stat"><div class="label">Total area</div><div id="stat-area" class="value"></div><div id="stat-acres" class="note"></div></div>
+      <div class="stat"><div class="label">Trees planted</div><div id="stat-trees" class="value"></div><div id="stat-tph" class="note"></div></div>
+      <div class="stat"><div class="label">Surviving trees</div><div id="stat-surviving" class="value"></div><div id="stat-survival" class="note"></div></div>
+      <div class="stat"><div class="label">Trees per credit</div><div id="stat-tpc" class="value"></div><div class="note">At mature annual carbon storage</div></div>
+    </section>
+
+    <section class="main">
+      <aside class="card controls">
+        <h2>Assumptions</h2>
+        <p>Still simple, but less rosy. Stage 1 now shows time and basic delivery costs.</p>
+        <div id="controls"></div>
+      </aside>
+
+      <section>
+        <div class="lessons">
+          <div class="lesson"><div class="lesson-title">How big is 1 hectare?</div><p id="lesson-hectare"></p></div>
+          <div class="lesson"><div class="lesson-title">First aha</div><p id="lesson-credit"></p></div>
+          <div class="lesson"><div class="lesson-title">Time matters</div><p id="lesson-time"></p></div>
+        </div>
+
+        <div class="card">
+          <h2>Trees growing over time</h2>
+          <p>No forestry equations yet. Just the basic idea that young trees store much less carbon than mature trees.</p>
+          <div class="chart-wrap"><canvas id="growthChart"></canvas></div>
+        </div>
+
+        <div class="chart-grid">
+          <div class="card">
+            <h2>Carbon credits by year</h2>
+            <p>For Stage 1, assume 1 tCO₂ equals 1 carbon credit.</p>
+            <div class="chart-wrap"><canvas id="creditChart"></canvas></div>
+          </div>
+          <div class="card">
+            <h2>Simple project economics</h2>
+            <p>Revenue versus planting, maintenance, and basic program support.</p>
+            <div class="chart-wrap"><canvas id="economicsChart"></canvas></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Cumulative position</h2>
+          <p>This is the key Stage 1 lesson: early costs create a hole that carbon revenue fills slowly.</p>
+          <div class="chart-wrap"><canvas id="cumulativeChart"></canvas></div>
+        </div>
+
+        <section class="stats">
+          <div class="stat"><div class="label">10-year carbon credits</div><div id="stat-total-carbon" class="value"></div><div class="note">Before buffers, verification, and issuance rules</div></div>
+          <div class="stat"><div class="label">10-year carbon revenue</div><div id="stat-total-revenue" class="value"></div><div id="stat-total-revenue-note" class="note"></div></div>
+          <div class="stat"><div class="label">10-year simple surplus</div><div id="stat-total-surplus" class="value"></div><div class="note">Revenue minus basic costs only, not full project finance</div></div>
+        </section>
+
+        <div class="card">
+          <h2>What we intentionally left out</h2>
+          <p class="footer-note">
+            This first stage still does not include issuance delays, buffers, verification, leakage, farmer payments,
+            financing, discount rates, or investor returns. Those are real and will make the economics tighter.
+            Stage 1 only teaches the basic engine plus one crucial reality: carbon revenue takes time.
+          </p>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <script>
+    const growthCurve = [0, 0.03, 0.08, 0.15, 0.25, 0.38, 0.52, 0.66, 0.78, 0.9, 1];
+    const defaults = {
+      farmers: 500,
+      hectaresPerFarmer: 2,
+      treesPerHa: 100,
+      survivalRate: 75,
+      carbonPerTreeAtMaturity: 0.04,
+      carbonPrice: 10,
+      plantingCostPerTree: 2.5,
+      annualMaintenancePerTree: 0.35,
+      annualProgramCostPerFarmer: 35,
+    };
+    let inputs = {...defaults};
+    let charts = {};
+
+    const controls = [
+      ["farmers", "Farmers in cooperative", 50, 2000, 50, "", "", "Starter story uses 500 coffee farmers."],
+      ["hectaresPerFarmer", "Average farm size", 0.5, 5, 0.5, "", " ha", "Many East African smallholders farm roughly 1 to 3 hectares."],
+      ["treesPerHa", "Shade trees per hectare", 25, 250, 25, "", "", "Trees are added alongside coffee, not replacing farms with forest."],
+      ["survivalRate", "Tree survival rate", 50, 95, 5, "", "%", "Default lowered to 75% to avoid assuming excellent implementation."],
+      ["carbonPerTreeAtMaturity", "Carbon stored per surviving tree at maturity", 0.02, 0.1, 0.01, "", " tCO₂/yr", "Default lowered to 0.04 tCO₂, or 40 kg per year."],
+      ["carbonPrice", "Carbon price", 3, 50, 1, "$", "/credit", "Default lowered to $10 to avoid making revenue look too easy."],
+      ["plantingCostPerTree", "Planting cost", 0, 8, 0.25, "$", "/tree", "Includes seedlings and basic planting support."],
+      ["annualMaintenancePerTree", "Annual tree maintenance", 0, 2, 0.05, "$", "/tree", "Simple recurring tree care cost."],
+      ["annualProgramCostPerFarmer", "Annual program cost", 0, 150, 5, "$", "/farmer", "Training, field support, and basic coordination."],
+    ];
+
+    function fmtNum(n, d=0) {
+      return Number(n || 0).toLocaleString(undefined, {maximumFractionDigits: d, minimumFractionDigits: d});
+    }
+    function fmtMoney(n) {
+      if (!Number.isFinite(n)) return "$0";
+      const abs = Math.abs(n);
+      const sign = n < 0 ? "-" : "";
+      if (abs >= 1000000) return `${sign}$${(abs/1000000).toFixed(1)}M`;
+      if (abs >= 1000) return `${sign}$${(abs/1000).toFixed(0)}k`;
+      return `${sign}$${Math.round(abs).toLocaleString()}`;
+    }
+
+    function buildControls() {
+      const wrap = document.getElementById("controls");
+      wrap.innerHTML = controls.map(([key, label, min, max, step, prefix, suffix, note]) => `
+        <div class="control">
+          <div class="control-head">
+            <div>
+              <div class="control-title">${label}</div>
+              <div class="note">${note}</div>
+            </div>
+            <div class="control-value" id="val-${key}"></div>
+          </div>
+          <input id="input-${key}" type="range" min="${min}" max="${max}" step="${step}" value="${inputs[key]}" oninput="setInput('${key}', Number(this.value))" />
+        </div>
+      `).join("");
+    }
+
+    function setInput(key, value) {
+      inputs[key] = value;
+      update();
+    }
+
+    function resetInputs() {
+      inputs = {...defaults};
+      for (const [key] of controls) {
+        document.getElementById(`input-${key}`).value = inputs[key];
+      }
+      update();
+    }
+
+    function model() {
+      const hectares = inputs.farmers * inputs.hectaresPerFarmer;
+      const acres = hectares * 2.471;
+      const treesPlanted = hectares * inputs.treesPerHa;
+      const survivingTrees = treesPlanted * (inputs.survivalRate / 100);
+      const treesPerCreditAtMaturity = 1 / inputs.carbonPerTreeAtMaturity;
+      let cumulative = 0;
+      const rows = Array.from({length: 11}, (_, year) => {
+        const growth = growthCurve[year];
+        const carbonPerTree = inputs.carbonPerTreeAtMaturity * growth;
+        const carbon = survivingTrees * carbonPerTree;
+        const credits = carbon;
+        const revenue = credits * inputs.carbonPrice;
+        const plantingCost = year === 0 ? treesPlanted * inputs.plantingCostPerTree : 0;
+        const maintenanceCost = year > 0 ? survivingTrees * inputs.annualMaintenancePerTree : 0;
+        const programCost = year > 0 ? inputs.farmers * inputs.annualProgramCostPerFarmer : 0;
+        const totalCost = plantingCost + maintenanceCost + programCost;
+        const simpleSurplus = revenue - totalCost;
+        cumulative += simpleSurplus;
+        return {year, growth, carbon, credits, revenue, totalCost, cumulative};
+      });
+      const totals = rows.reduce((s, r) => ({
+        carbon: s.carbon + r.carbon,
+        revenue: s.revenue + r.revenue,
+        cost: s.cost + r.totalCost,
+        surplus: s.surplus + (r.revenue - r.totalCost),
+      }), {carbon: 0, revenue: 0, cost: 0, surplus: 0});
+      const maxAnnualRevenue = Math.max(...rows.map(r => r.revenue));
+      const meaningfulRevenueYear = rows.find(r => r.revenue >= maxAnnualRevenue * 0.5)?.year ?? 0;
+      return {hectares, acres, treesPlanted, survivingTrees, treesPerCreditAtMaturity, rows, totals, meaningfulRevenueYear};
+    }
+
+    function makeChart(id, type, data, options) {
+      const ctx = document.getElementById(id);
+      if (charts[id]) charts[id].destroy();
+      charts[id] = new Chart(ctx, {type, data, options});
+    }
+
+    function update() {
+      const m = model();
+      for (const [key,,,,,prefix,suffix] of controls) {
+        const decimals = (key === "carbonPerTreeAtMaturity") ? 2 : (key.includes("Maintenance") || key.includes("plantingCost") ? 2 : key === "hectaresPerFarmer" ? 1 : 0);
+        document.getElementById(`val-${key}`).textContent = `${prefix}${fmtNum(inputs[key], decimals)}${suffix}`;
+      }
+
+      document.getElementById("stat-area").textContent = `${fmtNum(m.hectares)} ha`;
+      document.getElementById("stat-acres").textContent = `${fmtNum(m.acres)} acres`;
+      document.getElementById("stat-trees").textContent = fmtNum(m.treesPlanted);
+      document.getElementById("stat-tph").textContent = `${fmtNum(inputs.treesPerHa)} trees per hectare`;
+      document.getElementById("stat-surviving").textContent = fmtNum(m.survivingTrees);
+      document.getElementById("stat-survival").textContent = `${inputs.survivalRate}% survival`;
+      document.getElementById("stat-tpc").textContent = `~${fmtNum(m.treesPerCreditAtMaturity)}`;
+
+      document.getElementById("lesson-hectare").textContent = `1 hectare is about 2.5 acres, or roughly 1.4 American football fields. In this story, the cooperative farms about ${fmtNum(m.hectares)} hectares total.`;
+      document.getElementById("lesson-credit").textContent = `One tree is not one credit. With this proxy, about ${fmtNum(m.treesPerCreditAtMaturity)} mature trees growing for one year create about one carbon credit.`;
+      document.getElementById("lesson-time").textContent = `In this version, revenue does not become meaningful until around Year ${m.meaningfulRevenueYear}. The project starts with a cash-flow hole.`;
+
+      document.getElementById("stat-total-carbon").textContent = fmtNum(m.totals.carbon);
+      document.getElementById("stat-total-revenue").textContent = fmtMoney(m.totals.revenue);
+      document.getElementById("stat-total-revenue-note").textContent = `At ${fmtMoney(inputs.carbonPrice)} per credit`;
+      document.getElementById("stat-total-surplus").textContent = fmtMoney(m.totals.surplus);
+
+      const labels = m.rows.map(r => `Year ${r.year}`);
+      const commonOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: {mode: "index", intersect: false},
+        plugins: {legend: {display: true}},
+        scales: {x: {grid: {color: "#e2e8f0"}}, y: {grid: {color: "#e2e8f0"}}}
+      };
+
+      makeChart("growthChart", "line", {
+        labels,
+        datasets: [{label: "Growth ramp", data: m.rows.map(r => r.growth * 100), borderColor: "#047857", backgroundColor: "#047857", borderWidth: 3, tension: 0.25}]
+      }, {...commonOptions, scales: {...commonOptions.scales, y: {...commonOptions.scales.y, ticks: {callback: v => `${v}%`}}}});
+
+      makeChart("creditChart", "bar", {
+        labels,
+        datasets: [{label: "Credits", data: m.rows.map(r => r.credits), backgroundColor: "#059669", borderRadius: 8}]
+      }, {...commonOptions, scales: {...commonOptions.scales, y: {...commonOptions.scales.y, ticks: {callback: v => `${fmtNum(v/1000)}k`}}}});
+
+      makeChart("economicsChart", "bar", {
+        labels,
+        datasets: [
+          {label: "Revenue", data: m.rows.map(r => r.revenue), backgroundColor: "#059669", borderRadius: 8},
+          {label: "Simple costs", data: m.rows.map(r => r.totalCost), backgroundColor: "#f97316", borderRadius: 8}
+        ]
+      }, {...commonOptions, scales: {...commonOptions.scales, y: {...commonOptions.scales.y, ticks: {callback: fmtMoney}}}});
+
+      makeChart("cumulativeChart", "line", {
+        labels,
+        datasets: [{label: "Cumulative revenue minus simple costs", data: m.rows.map(r => r.cumulative), borderColor: "#2563eb", backgroundColor: "#2563eb", borderWidth: 3, tension: 0.25}]
+      }, {...commonOptions, scales: {...commonOptions.scales, y: {...commonOptions.scales.y, ticks: {callback: fmtMoney}}}});
+    }
+
+    buildControls();
+    update();
+  </script>
+</body>
+</html>
