@@ -58,6 +58,22 @@ input[type=range]{width:100%;accent-color:var(--green)}
 .stat{padding:18px}
 ul{margin:12px 0 0;padding-left:20px}
 li{margin-bottom:8px;line-height:1.6;color:var(--muted)}
+
+/* Sensitivity table section below the main dashboard */
+.sensitivity-section{margin-top:24px}
+.sensitivity-card{padding:22px;margin:0}
+.sensitivity-intro{max-width:820px;margin-bottom:18px}
+.sensitivity-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:18px}
+.sensitivity-table{width:100%;border-collapse:collapse;min-width:760px;font-size:14px}
+.sensitivity-table th,.sensitivity-table td{border-bottom:1px solid var(--line);border-right:1px solid var(--line);padding:12px;text-align:right;white-space:nowrap}
+.sensitivity-table th:first-child,.sensitivity-table td:first-child{text-align:left;font-weight:800;background:#f8fafc;position:sticky;left:0;z-index:1}
+.sensitivity-table th{background:#f1f5f9;color:var(--text);font-size:12px;text-transform:uppercase;letter-spacing:.05em}
+.sensitivity-table tr:last-child td{border-bottom:0}
+.sensitivity-table th:last-child,.sensitivity-table td:last-child{border-right:0}
+.sensitivity-positive{background:#ecfdf5;color:#065f46;font-weight:800}
+.sensitivity-near{background:#fffbeb;color:#78350f;font-weight:800}
+.sensitivity-negative{background:#fff1f2;color:#881337;font-weight:800}
+
 @media(max-width:1000px){.main{grid-template-columns:1fr;grid-template-areas:"chart" "sideTop" "below" "context"}.assumption-grid{grid-template-columns:repeat(2,1fr)}.stats{grid-template-columns:1fr}.toprow{flex-direction:column}}
 /* Mobile layout */
 </style>
@@ -130,6 +146,18 @@ li{margin-bottom:8px;line-height:1.6;color:var(--muted)}
 </ul>
 </div>
 </section>
+
+<!-- SENSITIVITY ANALYSIS SECTION -->
+<section class="sensitivity-section">
+<div class="card sensitivity-card">
+<h2>Sensitivity analysis</h2>
+<p class="sensitivity-intro">This table shows how the project changes across different carbon prices and project lengths. Each cell shows cumulative revenue minus basic costs.</p>
+<div class="sensitivity-wrap">
+<table class="sensitivity-table" id="sensitivity-table"></table>
+</div>
+</div>
+</section>
+
 </main>
 
 <script>
@@ -207,7 +235,30 @@ const options={responsive:true,maintainAspectRatio:false,interaction:{mode:"inde
 if(mainChart)mainChart.destroy();
 mainChart=new Chart(document.getElementById("mainChart"),{data,options});
 }
-buildStatic();update();
+
+/* Build sensitivity table for carbon price and project length combinations */
+function calculateSurplusFor(price,years){
+const saved={...inputs};
+inputs.carbonPrice=price;
+inputs.projectYears=years;
+const surplus=model().totals.surplus;
+inputs=saved;
+return surplus;
+}
+function sensitivityClass(value){
+if(value>25000)return "sensitivity-positive";
+if(value>-25000)return "sensitivity-near";
+return "sensitivity-negative";
+}
+function buildSensitivityTable(){
+const prices=[10,20,30,40,50,60];
+const years=[5,10,15,20];
+const header=`<thead><tr><th>Carbon price</th>${years.map(y=>`<th>${y} years</th>`).join("")}</tr></thead>`;
+const body=`<tbody>${prices.map(price=>`<tr><td>${fmtMoney(price)}/credit</td>${years.map(year=>{const surplus=calculateSurplusFor(price,year);return `<td class="${sensitivityClass(surplus)}">${fmtMoney(surplus)}</td>`}).join("")}</tr>`).join("")}</tbody>`;
+document.getElementById("sensitivity-table").innerHTML=header+body;
+}
+
+buildStatic();update();buildSensitivityTable();
 </script>
 </body>
 </html>
