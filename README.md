@@ -4,7 +4,7 @@ Stage 1 prototype for an interactive educational tool explaining how agroforestr
 
 ## Current version
 
-This version uses a fixed Uganda coffee cooperative scenario and lets users change only three variables:
+This version is framed as a break-even challenge. It uses a fixed Uganda coffee cooperative scenario and lets users change only three variables:
 
 - Carbon price
 - Tree survival rate

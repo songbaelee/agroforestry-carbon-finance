@@ -7,28 +7,14 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     :root {
-      --bg: #f8fafc;
-      --card: #ffffff;
-      --text: #0f172a;
-      --muted: #64748b;
-      --line: #e2e8f0;
-      --green: #059669;
-      --orange: #f97316;
-      --blue: #2563eb;
-      --amber-bg: #fffbeb;
-      --amber-text: #78350f;
-      --emerald-bg: #ecfdf5;
-      --emerald-text: #065f46;
+      --bg: #f8fafc; --card: #ffffff; --text: #0f172a; --muted: #64748b; --line: #e2e8f0;
+      --green: #059669; --orange: #f97316; --blue: #2563eb; --amber-bg: #fffbeb; --amber-text: #78350f;
+      --emerald-bg: #ecfdf5; --emerald-text: #065f46;
     }
     * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: var(--bg);
-      color: var(--text);
-    }
+    body { margin: 0; font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: var(--bg); color: var(--text); }
     .page { max-width: 1240px; margin: 0 auto; padding: 32px 18px 48px; }
-    .hero, .card, .stat, .lesson { background: var(--card); border: 1px solid var(--line); border-radius: 24px; box-shadow: 0 1px 2px rgba(15,23,42,.04); }
+    .hero, .card, .stat, .takeaway, .status { background: var(--card); border: 1px solid var(--line); border-radius: 24px; box-shadow: 0 1px 2px rgba(15,23,42,.04); }
     .hero { padding: 32px; margin-bottom: 18px; }
     .badge { display: inline-block; padding: 6px 12px; border-radius: 999px; background: var(--emerald-bg); color: var(--emerald-text); font-size: 14px; font-weight: 700; margin-bottom: 12px; }
     h1 { font-size: clamp(32px, 5vw, 56px); line-height: 1.02; margin: 0; letter-spacing: -0.04em; }
@@ -37,7 +23,7 @@
     .hero p { max-width: 820px; font-size: 18px; }
     .toprow { display: flex; align-items: start; justify-content: space-between; gap: 20px; }
     button { border: 1px solid var(--line); background: white; padding: 10px 14px; border-radius: 16px; cursor: pointer; font-weight: 700; color: var(--text); }
-    .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin: 18px 0; }
+    .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin: 0 0 20px; }
     .stat { padding: 18px; }
     .label { color: var(--muted); font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; }
     .value { font-size: 28px; font-weight: 850; margin-top: 4px; }
@@ -53,15 +39,21 @@
     .assumption-top { display: flex; justify-content: space-between; gap: 12px; font-size: 14px; }
     .assumption-label { font-weight: 750; }
     .assumption-value { font-weight: 850; }
-    .lessons { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 20px; }
-    .lesson { background: var(--amber-bg); border-color: #fde68a; color: var(--amber-text); padding: 18px; }
-    .lesson-title { font-weight: 850; margin-bottom: 6px; }
-    .lesson p { color: var(--amber-text); margin: 0; font-size: 14px; }
-    .chart-wrap { height: 310px; }
+    .status { padding: 22px; margin-bottom: 20px; }
+    .status.negative { background: #fff1f2; color: #881337; border-color: #fecdd3; }
+    .status.near { background: #fffbeb; color: #78350f; border-color: #fde68a; }
+    .status.positive { background: #ecfdf5; color: #064e3b; border-color: #a7f3d0; }
+    .status .status-title { font-size: 13px; text-transform: uppercase; font-weight: 800; letter-spacing: .06em; opacity: .8; }
+    .status .status-main { font-size: 32px; font-weight: 850; margin-top: 4px; }
+    .chart-wrap { height: 330px; }
     .chart-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .takeaways { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 16px; }
+    .takeaway { background: var(--amber-bg); border-color: #fde68a; color: var(--amber-text); padding: 18px; }
+    .takeaway-title { font-weight: 850; margin-bottom: 6px; }
+    .takeaway p { color: var(--amber-text); margin: 0; font-size: 14px; }
     @media (max-width: 960px) {
       .main { grid-template-columns: 1fr; }
-      .stats, .lessons, .chart-grid { grid-template-columns: 1fr; }
+      .stats, .chart-grid, .takeaways { grid-template-columns: 1fr; }
       .toprow { flex-direction: column; }
     }
   </style>
@@ -72,18 +64,11 @@
       <div class="toprow">
         <div>
           <div class="badge">Stage 1: Interactive Financial Literacy</div>
-          <h1>How Trees on Farms Can Generate Carbon Revenue</h1>
-          <p>Imagine a cooperative of 500 coffee farmers in Uganda planting shade trees alongside existing coffee farms. The first lesson is simple: trees take time, costs come early, and carbon revenue builds slowly.</p>
+          <h1>Can Carbon Revenue Make This Agroforestry Project Work?</h1>
+          <p>Start with a simple Uganda coffee cooperative example. The starting case loses money. Change carbon price, tree survival, and growth speed to see what it takes to break even.</p>
         </div>
         <button onclick="resetInputs()">Reset</button>
       </div>
-    </section>
-
-    <section class="stats">
-      <div class="stat"><div class="label">Total area</div><div id="stat-area" class="value"></div><div id="stat-acres" class="note"></div></div>
-      <div class="stat"><div class="label">Trees planted</div><div id="stat-trees" class="value"></div><div id="stat-tph" class="note"></div></div>
-      <div class="stat"><div class="label">Surviving trees</div><div id="stat-surviving" class="value"></div><div id="stat-survival" class="note"></div></div>
-      <div class="stat"><div class="label">Trees per credit</div><div id="stat-tpc" class="value"></div><div class="note">At mature annual carbon storage</div></div>
     </section>
 
     <section class="main">
@@ -93,30 +78,34 @@
           <p>These define the example. They are fixed for Stage 1.</p>
           <div id="assumptions"></div>
         </div>
-        <div class="card">
-          <h2>Try changing</h2>
-          <p>These three variables drive the main economic intuition.</p>
-          <div id="controls"></div>
-        </div>
       </aside>
 
       <section>
-        <div class="lessons">
-          <div class="lesson"><div class="lesson-title">How big is 1 hectare?</div><p id="lesson-hectare"></p></div>
-          <div class="lesson"><div class="lesson-title">One tree is not one credit</div><p id="lesson-credit"></p></div>
-          <div class="lesson"><div class="lesson-title">Time matters</div><p id="lesson-time"></p></div>
+        <section class="stats">
+          <div class="stat"><div class="label">Total area</div><div id="stat-area" class="value"></div><div id="stat-acres" class="note"></div></div>
+          <div class="stat"><div class="label">Trees planted</div><div id="stat-trees" class="value"></div><div id="stat-tph" class="note"></div></div>
+          <div class="stat"><div class="label">Surviving trees</div><div id="stat-surviving" class="value"></div><div id="stat-survival" class="note"></div></div>
+          <div class="stat"><div class="label">Trees per credit</div><div id="stat-tpc" class="value"></div><div class="note">At mature annual carbon storage</div></div>
+        </section>
+
+        <div id="status" class="status"></div>
+
+        <div class="card">
+          <h2>Try changing</h2>
+          <p>What has to change for the project to break even?</p>
+          <div id="controls"></div>
         </div>
 
         <div class="card">
-          <h2>Trees growing over time</h2>
-          <p>Young trees store much less carbon than mature trees.</p>
-          <div class="chart-wrap"><canvas id="growthChart"></canvas></div>
+          <h2>Cumulative position</h2>
+          <p>Early costs create a hole that carbon revenue fills slowly.</p>
+          <div class="chart-wrap"><canvas id="cumulativeChart"></canvas></div>
         </div>
 
         <div class="chart-grid">
           <div class="card">
             <h2>Carbon credits by year</h2>
-            <p>For Stage 1, assume 1 tCO₂ equals 1 carbon credit.</p>
+            <p>Young trees store much less carbon than mature trees.</p>
             <div class="chart-wrap"><canvas id="creditChart"></canvas></div>
           </div>
           <div class="card">
@@ -126,12 +115,6 @@
           </div>
         </div>
 
-        <div class="card">
-          <h2>Cumulative position</h2>
-          <p>Early costs create a hole that carbon revenue fills slowly.</p>
-          <div class="chart-wrap"><canvas id="cumulativeChart"></canvas></div>
-        </div>
-
         <section class="stats">
           <div class="stat"><div class="label">10-year carbon credits</div><div id="stat-total-carbon" class="value"></div><div class="note">Before buffers, verification, and issuance rules</div></div>
           <div class="stat"><div class="label">10-year carbon revenue</div><div id="stat-total-revenue" class="value"></div><div id="stat-total-revenue-note" class="note"></div></div>
@@ -139,8 +122,12 @@
         </section>
 
         <div class="card">
-          <h2>What we add next</h2>
-          <p>Stage 2 adds the carbon-market friction: issuance delays, buffers, verification, leakage, and sales discounts. These turn gross carbon into sellable credits and usually make the economics tighter.</p>
+          <h2>Key takeaways</h2>
+          <div class="takeaways">
+            <div class="takeaway"><div class="takeaway-title">How big is 1 hectare?</div><p id="takeaway-hectare"></p></div>
+            <div class="takeaway"><div class="takeaway-title">One tree is not one credit</div><p id="takeaway-credit"></p></div>
+            <div class="takeaway"><div class="takeaway-title">What we add next</div><p>Stage 2 adds issuance delays, buffers, verification, leakage, and sales discounts.</p></div>
+          </div>
         </div>
       </section>
     </section>
@@ -148,14 +135,8 @@
 
   <script>
     const scenario = {
-      farmers: 500,
-      hectaresPerFarmer: 2,
-      treesPerHa: 100,
-      carbonPerTreeAtMaturity: 0.04,
-      projectYears: 10,
-      plantingCostPerTree: 2.5,
-      annualMaintenancePerTree: 0.35,
-      annualProgramCostPerFarmer: 35,
+      farmers: 500, hectaresPerFarmer: 2, treesPerHa: 100, carbonPerTreeAtMaturity: 0.04,
+      projectYears: 10, plantingCostPerTree: 2.5, annualMaintenancePerTree: 0.35, annualProgramCostPerFarmer: 35
     };
     const defaults = { carbonPrice: 10, survivalRate: 75, growthSpeed: 1 };
     let inputs = {...defaults};
@@ -186,17 +167,14 @@
 
     function buildStatic() {
       document.getElementById("assumptions").innerHTML = [
-        ["Farmers", fmtNum(scenario.farmers), "A cooperative of coffee farmers in Uganda."],
+        ["Farmers", fmtNum(scenario.farmers), "A coffee farmer cooperative in Uganda."],
         ["Average farm size", `${fmtNum(scenario.hectaresPerFarmer)} ha`, "About 5 acres per farmer."],
         ["Total project area", "1,000 ha", "About 2,471 acres across the cooperative."],
         ["Shade trees", `${fmtNum(scenario.treesPerHa)} / ha`, "Trees are added alongside coffee, not replacing farms with forest."],
         ["Carbon per mature surviving tree", `${scenario.carbonPerTreeAtMaturity} tCO₂/year`, "A simplified proxy, not a species-specific estimate."],
         ["Simple costs", `$${scenario.plantingCostPerTree}/tree + yearly support`, "Planting, tree maintenance, and basic program support are fixed for now."]
       ].map(([label, value, note]) => `
-        <div class="assumption">
-          <div class="assumption-top"><div class="assumption-label">${label}</div><div class="assumption-value">${value}</div></div>
-          <div class="note">${note}</div>
-        </div>`).join("");
+        <div class="assumption"><div class="assumption-top"><div class="assumption-label">${label}</div><div class="assumption-value">${value}</div></div><div class="note">${note}</div></div>`).join("");
 
       document.getElementById("controls").innerHTML = controls.map(([key, label, min, max, step, prefix, suffix, note]) => `
         <div class="control">
@@ -224,8 +202,7 @@
       let cumulative = 0;
       const rows = Array.from({length: scenario.projectYears + 1}, (_, year) => {
         const growth = getGrowth(year, inputs.growthSpeed);
-        const carbon = survivingTrees * scenario.carbonPerTreeAtMaturity * growth;
-        const credits = carbon;
+        const credits = survivingTrees * scenario.carbonPerTreeAtMaturity * growth;
         const revenue = credits * inputs.carbonPrice;
         const plantingCost = year === 0 ? treesPlanted * scenario.plantingCostPerTree : 0;
         const maintenanceCost = year > 0 ? survivingTrees * scenario.annualMaintenancePerTree : 0;
@@ -235,9 +212,8 @@
         return {year, growth, credits, revenue, totalCost, cumulative};
       });
       const totals = rows.reduce((s, r) => ({carbon: s.carbon + r.credits, revenue: s.revenue + r.revenue, cost: s.cost + r.totalCost, surplus: s.surplus + r.revenue - r.totalCost}), {carbon:0, revenue:0, cost:0, surplus:0});
-      const maxAnnualRevenue = Math.max(...rows.map(r => r.revenue));
-      const meaningfulRevenueYear = rows.find(r => r.revenue >= maxAnnualRevenue * 0.5)?.year ?? 0;
-      return {hectares, acres, treesPlanted, survivingTrees, treesPerCreditAtMaturity, rows, totals, meaningfulRevenueYear};
+      const status = totals.surplus > 0 ? "Positive" : totals.surplus > -50000 ? "Near break-even" : "Not viable";
+      return {hectares, acres, treesPlanted, survivingTrees, treesPerCreditAtMaturity, rows, totals, status};
     }
 
     function makeChart(id, type, data, options) {
@@ -259,20 +235,24 @@
       document.getElementById("stat-surviving").textContent = fmtNum(m.survivingTrees);
       document.getElementById("stat-survival").textContent = `${inputs.survivalRate}% survival`;
       document.getElementById("stat-tpc").textContent = `~${fmtNum(m.treesPerCreditAtMaturity)}`;
-      document.getElementById("lesson-hectare").textContent = `1 hectare is about 2.5 acres, or roughly 1.4 American football fields. This example covers ${fmtNum(m.hectares)} hectares.`;
-      document.getElementById("lesson-credit").textContent = `With this proxy, about ${fmtNum(m.treesPerCreditAtMaturity)} mature trees growing for one year create about one carbon credit.`;
-      document.getElementById("lesson-time").textContent = `Revenue becomes meaningful around Year ${m.meaningfulRevenueYear}. Early costs create a hole that carbon revenue fills slowly.`;
       document.getElementById("stat-total-carbon").textContent = fmtNum(m.totals.carbon);
       document.getElementById("stat-total-revenue").textContent = fmtMoney(m.totals.revenue);
       document.getElementById("stat-total-revenue-note").textContent = `At ${fmtMoney(inputs.carbonPrice)} per credit`;
       document.getElementById("stat-total-surplus").textContent = fmtMoney(m.totals.surplus);
+      document.getElementById("takeaway-hectare").textContent = `1 hectare is about 2.5 acres, or roughly 1.4 American football fields. This example covers ${fmtNum(m.hectares)} hectares.`;
+      document.getElementById("takeaway-credit").textContent = `With this proxy, about ${fmtNum(m.treesPerCreditAtMaturity)} mature trees growing for one year create about one carbon credit.`;
+
+      const statusEl = document.getElementById("status");
+      const cls = m.status === "Positive" ? "positive" : m.status === "Near break-even" ? "near" : "negative";
+      const dot = m.status === "Positive" ? "🟢" : m.status === "Near break-even" ? "🟡" : "🔴";
+      statusEl.className = `status ${cls}`;
+      statusEl.innerHTML = `<div class="status-title">Project status</div><div class="status-main">${dot} ${m.status}</div><p>10-year cumulative position: <strong>${fmtMoney(m.totals.surplus)}</strong></p><p>Challenge: adjust the three variables to see what it takes to break even.</p>`;
 
       const labels = m.rows.map(r => `Year ${r.year}`);
       const commonOptions = { responsive: true, maintainAspectRatio: false, interaction: {mode: "index", intersect: false}, plugins: {legend: {display: true}}, scales: {x: {grid: {color: "#e2e8f0"}}, y: {grid: {color: "#e2e8f0"}}} };
-      makeChart("growthChart", "line", {labels, datasets: [{label: "Growth ramp", data: m.rows.map(r => r.growth * 100), borderColor: "#047857", backgroundColor: "#047857", borderWidth: 3, tension: .25}]}, {...commonOptions, scales: {...commonOptions.scales, y: {...commonOptions.scales.y, ticks: {callback: v => `${v}%`}}}});
+      makeChart("cumulativeChart", "line", {labels, datasets: [{label: "Cumulative revenue minus simple costs", data: m.rows.map(r => r.cumulative), borderColor: "#2563eb", backgroundColor: "#2563eb", borderWidth: 3, tension: .25}]}, {...commonOptions, scales: {...commonOptions.scales, y: {...commonOptions.scales.y, ticks: {callback: fmtMoney}}}});
       makeChart("creditChart", "bar", {labels, datasets: [{label: "Credits", data: m.rows.map(r => r.credits), backgroundColor: "#059669", borderRadius: 8}]}, {...commonOptions, scales: {...commonOptions.scales, y: {...commonOptions.scales.y, ticks: {callback: v => `${fmtNum(v/1000)}k`}}}});
       makeChart("economicsChart", "bar", {labels, datasets: [{label: "Revenue", data: m.rows.map(r => r.revenue), backgroundColor: "#059669", borderRadius: 8}, {label: "Simple costs", data: m.rows.map(r => r.totalCost), backgroundColor: "#f97316", borderRadius: 8}]}, {...commonOptions, scales: {...commonOptions.scales, y: {...commonOptions.scales.y, ticks: {callback: fmtMoney}}}});
-      makeChart("cumulativeChart", "line", {labels, datasets: [{label: "Cumulative revenue minus simple costs", data: m.rows.map(r => r.cumulative), borderColor: "#2563eb", backgroundColor: "#2563eb", borderWidth: 3, tension: .25}]}, {...commonOptions, scales: {...commonOptions.scales, y: {...commonOptions.scales.y, ticks: {callback: fmtMoney}}}});
     }
 
     buildStatic();
