@@ -29,11 +29,13 @@ button{border:1px solid var(--line);background:#fff;padding:10px 14px;border-rad
 .label{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
 .value{font-size:24px;font-weight:850;margin-top:4px}
 .note{font-size:13px;line-height:1.5;margin-top:6px;color:var(--muted)}
-/* Main two-column workspace: chart/stats on left, status/controls/context on right */
-.main{display:grid;grid-template-columns:minmax(0,1fr) 390px;gap:20px;align-items:start;margin-top:24px}
-/* Right sidebar stack. Gap replaces ad hoc margins so the cards align more cleanly with the chart column. */
-aside{display:flex;flex-direction:column;gap:20px}
-aside .card{margin-top:0 !important;margin-bottom:0}
+/* Main dashboard grid: chart/status row above stats/context row */
+.main{display:grid;grid-template-columns:minmax(0,1fr) 390px;grid-template-areas:"chart sideTop" "below context";gap:20px;align-items:stretch;margin-top:24px}
+.chart-card{grid-area:chart;margin:0}
+.left-lower{grid-area:below;display:flex;flex-direction:column;gap:20px}
+.side-top{grid-area:sideTop;display:flex;flex-direction:column;gap:20px;height:100%}
+.context-card{grid-area:context;margin:0;height:100%}
+.controls-card{flex:1;margin:0;display:flex;flex-direction:column;justify-content:flex-start}
 /* Content cards and chart container */
 .card{padding:22px;margin-bottom:20px}
 .chart-wrap{height:430px}
@@ -45,17 +47,18 @@ aside .card{margin-top:0 !important;margin-bottom:0}
 .mini-reset{padding:6px 8px;font-size:12px}
 input[type=range]{width:100%;accent-color:var(--green)}
 /* Project status card */
-.status{padding:16px 22px}
+.status{padding:14px 22px;min-height:0}
 .status.negative{background:#fff1f2;border-color:#fecdd3;color:#881337}
 .status.near{background:#fffbeb;border-color:#fde68a;color:#78350f}
 .status.positive{background:#ecfdf5;border-color:#a7f3d0;color:#065f46}
-.status-main{font-size:22px;font-weight:800;margin-top:4px;line-height:1.15}
+.status-main{font-size:20px;font-weight:800;margin-top:4px;line-height:1.15}
+.status p{margin:10px 0 0;font-size:14px;line-height:1.45}
 /* Summary stats beneath the chart */
-.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:20px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:0}
 .stat{padding:18px}
 ul{margin:12px 0 0;padding-left:20px}
 li{margin-bottom:8px;line-height:1.6;color:var(--muted)}
-@media(max-width:1000px){.main{grid-template-columns:1fr}.assumption-grid{grid-template-columns:repeat(2,1fr)}.stats{grid-template-columns:1fr}.toprow{flex-direction:column}}
+@media(max-width:1000px){.main{grid-template-columns:1fr;grid-template-areas:"chart" "sideTop" "below" "context"}.assumption-grid{grid-template-columns:repeat(2,1fr)}.stats{grid-template-columns:1fr}.toprow{flex-direction:column}}
 /* Mobile layout */
 </style>
 </head>
@@ -76,14 +79,30 @@ li{margin-bottom:8px;line-height:1.6;color:var(--muted)}
 
 <!-- MAIN MODEL OUTPUT AREA -->
 <section class="main">
-<div>
 <!-- MAIN CHART CARD -->
-<div class="card">
+<div class="card chart-card">
 <h2>Revenue and simple costs</h2>
 <p>Revenue is positive, costs are negative, and the line shows cumulative revenue minus costs.</p>
 <div class="chart-wrap"><canvas id="mainChart"></canvas></div>
 </div>
 
+<!-- RIGHT TOP STACK: STATUS AND INPUT CONTROLS -->
+<div class="side-top">
+<!-- PROJECT STATUS CARD, FILLED BY JAVASCRIPT -->
+<div id="status" class="status"></div>
+
+<!-- INPUT CONTROLS CARD -->
+<div class="card controls-card">
+<div class="toprow">
+<div><h2>Try changing</h2></div>
+<button onclick="resetAll()">Reset all</button>
+</div>
+<div id="controls"></div>
+</div>
+</div>
+
+<!-- LOWER LEFT STACK: SUMMARY STATS AND NEXT STEPS -->
+<div class="left-lower">
 <!-- SUMMARY STAT CARDS -->
 <section class="stats">
 <div class="stat"><div class="label">Surviving trees</div><div id="stat-surviving" class="value"></div><div class="note">75% of planted trees</div></div>
@@ -92,7 +111,7 @@ li{margin-bottom:8px;line-height:1.6;color:var(--muted)}
 </section>
 
 <!-- NEXT STEPS CARD -->
-<div class="card">
+<div class="card" style="margin:0;">
 <h2>Next steps</h2>
 <ul style="display:grid;grid-template-columns:1fr 1fr;gap:2px 24px;">
 <li>Tree survival rates</li><li>Verification delays</li><li>Financing costs</li><li>Farmer revenue sharing</li><li>Carbon sales contracts</li><li>Developer vs farmer economics</li>
@@ -101,22 +120,8 @@ li{margin-bottom:8px;line-height:1.6;color:var(--muted)}
 </div>
 </div>
 
-<!-- RIGHT SIDEBAR: STATUS, INPUT CONTROLS, AND CONTEXT -->
-<aside>
-<!-- PROJECT STATUS CARD, FILLED BY JAVASCRIPT -->
-<div id="status" class="status"></div>
-
-<!-- INPUT CONTROLS CARD -->
-<div class="card">
-<div class="toprow">
-<div><h2>Try changing</h2></div>
-<button onclick="resetAll()">Reset all</button>
-</div>
-<div id="controls"></div>
-</div>
-
 <!-- CONTEXT CARD -->
-<div class="card">
+<div class="card context-card">
 <h2>Context</h2>
 <ul>
 <li>1 hectare is about 2.5 acres.</li>
@@ -125,7 +130,6 @@ li{margin-bottom:8px;line-height:1.6;color:var(--muted)}
 <li>Young trees store much less carbon than mature trees.</li>
 </ul>
 </div>
-</aside>
 </section>
 </main>
 
