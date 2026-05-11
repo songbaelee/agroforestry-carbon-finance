@@ -36,6 +36,15 @@ button{border:1px solid var(--line);background:#fff;padding:10px 14px;border-rad
 .side-top{grid-area:sideTop;display:flex;flex-direction:column;gap:20px;height:100%}
 .context-card{grid-area:context;margin:0;height:100%}
 .controls-card{flex:1;margin:0;display:flex;flex-direction:column;justify-content:flex-start}
+.stage-card{border:1px solid var(--line);border-radius:18px;padding:16px;margin-top:14px;background:#fff}
+.stage-card.collapsed{background:#f8fafc}
+.stage-head{display:flex;justify-content:space-between;align-items:start;gap:12px}
+.stage-title{font-weight:850}
+.stage-summary{font-size:13px;color:var(--muted);margin-top:4px;line-height:1.45}
+.stage-body{margin-top:12px}
+.stage-card.collapsed .stage-body{display:none}
+.stage-toggle{padding:8px 10px;font-size:13px;white-space:nowrap}
+.stage-note{font-size:14px;line-height:1.55;color:var(--muted);background:#f8fafc;border:1px solid var(--line);border-radius:14px;padding:12px;margin-top:12px}
 /* Content cards and chart container */
 .card{padding:22px;margin-bottom:20px}
 .chart-wrap{height:430px}
@@ -94,7 +103,7 @@ li{margin-bottom:8px;line-height:1.6;color:var(--muted)}
 <p>Carbon finance is complicated. Start by thinking in terms of variables, beginning with two: carbon price and time.</p>
 
 <p style="font-size:13px;color:#94a3b8;margin-top:10px;">
-Stage 1A • Version 0.1 • May 2026
+Stage 1A with Stage 1B preview • Version 0.2 • May 2026
 </p>
 
 <div style="margin-top:20px;">
@@ -110,7 +119,7 @@ Stage 1A • Version 0.1 • May 2026
 <!-- FIXED STAGE 1A ASSUMPTIONS -->
 <section>
 <h2>Basic assumptions</h2>
-<p>These assumptions are fixed for Stage 1A.</p>
+<p>These assumptions are fixed for this simplified learning model.</p>
 <div id="assumptions" class="assumption-grid"></div>
 </section>
 
@@ -118,8 +127,8 @@ Stage 1A • Version 0.1 • May 2026
 <section class="main">
 <!-- MAIN CHART CARD -->
 <div class="card chart-card">
-<h2>Revenue and simple costs</h2>
-<p>Revenue is positive, costs are negative, and the line shows cumulative revenue minus costs.</p>
+<h2 id="chart-title">Revenue and simple costs</h2>
+<p id="chart-subtitle">Revenue is positive, costs are negative, and the line shows cumulative revenue minus costs.</p>
 <div class="chart-wrap"><canvas id="mainChart"></canvas></div>
 </div>
 
@@ -131,7 +140,7 @@ Stage 1A • Version 0.1 • May 2026
 <!-- INPUT CONTROLS CARD -->
 <div class="card controls-card">
 <div class="toprow">
-<div><h2>Try changing</h2></div>
+<div><h2>Learning stages</h2></div>
 <button onclick="resetAll()">Reset all</button>
 </div>
 <div id="controls"></div>
@@ -151,7 +160,7 @@ Stage 1A • Version 0.1 • May 2026
 <div class="card" style="margin:0;">
 <h2>Next steps</h2>
 <ul style="display:grid;grid-template-columns:1fr 1fr;gap:2px 24px;">
-<li>Tree survival rates</li><li>Verification delays</li><li>Financing costs</li><li>Farmer revenue sharing</li><li>Carbon sales contracts</li><li>Developer vs farmer economics</li>
+<li>Tree survival rates</li><li>Financing gap</li><li>Financing costs</li><li>Farmer revenue sharing</li><li>Carbon sales contracts</li><li>Developer vs farmer economics</li>
 </ul>
 </div>
 </div>
@@ -172,11 +181,11 @@ Stage 1A • Version 0.1 • May 2026
 <section class="sensitivity-section">
 <details>
 <summary style="cursor:pointer;font-weight:700;margin-bottom:18px;">
-Show sensitivity analysis
+Explore scenarios
 </summary>
 <div class="card sensitivity-card">
 <h2>Sensitivity analysis</h2>
-<p class="sensitivity-intro">This table shows how the project changes across different carbon prices and project lengths. Each cell shows cumulative revenue minus basic costs.</p>
+<p class="sensitivity-intro">This table shows how the project changes across different carbon prices and project lengths. Each cell shows cumulative cash received minus basic costs.</p>
 <div class="sensitivity-wrap">
 <table class="sensitivity-table" id="sensitivity-table"></table>
 </div>
@@ -197,6 +206,7 @@ Carbon finance models can become extremely complicated very quickly, especially 
 <p>
 Stage 1A intentionally keeps the model simple by focusing on two core variables:
 <strong>carbon price</strong> and <strong>project length</strong>.
+Stage 1B adds only one realism layer: <strong>when carbon cash begins</strong>.
 Most biological and operating assumptions are held constant for now.
 </p>
 
@@ -276,16 +286,23 @@ moving into more technical tools.
    STAGE 1A MODEL CONFIGURATION
    ========================================================= */
 const scenario={farmers:500,hectaresPerFarmer:2,treesPerHa:100,carbonPerTreeAtMaturity:0.02,plantingCostPerTree:1.5,annualMaintenancePerTree:0.18,annualProgramCostPerFarmer:18,survivalRate:75,growthSpeed:1};
-const defaults={carbonPrice:15,projectYears:10};
+const defaults={carbonPrice:15,projectYears:10,firstPaymentYear:1};
 let inputs={...defaults};
+let activeStage="1A";
 let mainChart=null;
 const growthCurve=[0,0.02,0.05,0.10,0.18,0.28,0.40,0.54,0.68,0.80,0.90,1,1,1,1,1,1,1,1,1,1];
-const controls=[["carbonPrice","Carbon price",5,60,1,"$","/credit","Higher prices increase revenue directly."],["projectYears","Project length",5,20,1,""," years","Longer timelines allow more carbon accumulation."]];
+const stage1AControls=[["carbonPrice","Carbon price",5,60,1,"$","/credit","Higher prices increase revenue directly."],["projectYears","Project length",5,20,1,""," years","Longer timelines allow more carbon accumulation."]];
+const stage1BControls=[["firstPaymentYear","First carbon payment year",1,5,1,"Year ","","Carbon projects often wait years before receiving carbon revenue."]];
+const controls=[...stage1AControls,...stage1BControls];
 
 /* Formatting helpers */
 function fmtNum(n,d=0){return Number(n||0).toLocaleString(undefined,{maximumFractionDigits:d,minimumFractionDigits:d})}
 function fmtMoney(n){if(!Number.isFinite(n))return"$0";const abs=Math.abs(n),sign=n<0?"-":"";if(abs>=1000000)return`${sign}$${(abs/1000000).toFixed(1)}M`;if(abs>=1000)return`${sign}$${(abs/1000).toFixed(0)}k`;return`${sign}$${Math.round(abs).toLocaleString()}`}
 /* Build fixed assumptions and slider controls */
+function renderControls(controlSet){
+return controlSet.map(([key,label,min,max,step,prefix,suffix,note])=>`<div class="control"><div class="control-head"><div><div style="font-weight:750;">${label}</div><div class="note">${note}</div></div><div class="control-right"><div class="control-value" id="val-${key}"></div><button class="mini-reset" onclick="resetOne('${key}')">Reset</button></div></div><input id="input-${key}" type="range" min="${min}" max="${max}" step="${step}" value="${inputs[key]}" oninput="setInput('${key}', Number(this.value))" /></div>`).join("");
+}
+function setStage(stage){activeStage=stage;update()}
 function buildStatic(){
 const hectares=scenario.farmers*scenario.hectaresPerFarmer;
 const acres=hectares*2.471;
@@ -298,7 +315,30 @@ document.getElementById("assumptions").innerHTML=[
 ["Survival rate",`${scenario.survivalRate}%`,"Fixed in Stage 1A"],
 ["Carbon per tree",`${scenario.carbonPerTreeAtMaturity} tCO₂/yr`,"At maturity"]
 ].map(([l,v,n])=>`<div class="assumption"><div class="label">${l}</div><div class="value">${v}</div><div class="note">${n}</div></div>`).join("");
-document.getElementById("controls").innerHTML=controls.map(([key,label,min,max,step,prefix,suffix,note])=>`<div class="control"><div class="control-head"><div><div style="font-weight:750;">${label}</div><div class="note">${note}</div></div><div class="control-right"><div class="control-value" id="val-${key}"></div><button class="mini-reset" onclick="resetOne('${key}')">Reset</button></div></div><input id="input-${key}" type="range" min="${min}" max="${max}" step="${step}" value="${inputs[key]}" oninput="setInput('${key}', Number(this.value))" /></div>`).join("");
+document.getElementById("controls").innerHTML=`
+<div id="stage-1A" class="stage-card">
+  <div class="stage-head">
+    <div>
+      <div class="stage-title">Stage 1A: Basic project economics</div>
+      <div class="stage-summary" id="summary-1A"></div>
+    </div>
+    <button class="stage-toggle" onclick="setStage('1A')">Open</button>
+  </div>
+  <div class="stage-body">${renderControls(stage1AControls)}</div>
+</div>
+<div id="stage-1B" class="stage-card collapsed">
+  <div class="stage-head">
+    <div>
+      <div class="stage-title">Stage 1B: When carbon cash actually arrives</div>
+      <div class="stage-summary" id="summary-1B"></div>
+    </div>
+    <button class="stage-toggle" onclick="setStage('1B')">Open</button>
+  </div>
+  <div class="stage-body">
+    ${renderControls(stage1BControls)}
+    <div class="stage-note">Costs begin before carbon cash arrives. The question becomes: how large is the early funding gap?</div>
+  </div>
+</div>`;
 }
 /* Input handlers */
 function setInput(key,value){inputs[key]=value;update()}
@@ -309,30 +349,45 @@ function model(){
 const hectares=scenario.farmers*scenario.hectaresPerFarmer;
 const treesPlanted=hectares*scenario.treesPerHa;
 const survivingTrees=treesPlanted*(scenario.survivalRate/100);
+const firstPaymentYear=activeStage==="1B"?inputs.firstPaymentYear:1;
 let cumulative=0;
 const rows=Array.from({length:inputs.projectYears+1},(_,year)=>{
 const growth=growthCurve[Math.min(year,growthCurve.length-1)];
 const credits=survivingTrees*scenario.carbonPerTreeAtMaturity*growth;
-const revenue=credits*inputs.carbonPrice;
+const earnedRevenue=credits*inputs.carbonPrice;
+const revenue=year>=firstPaymentYear?earnedRevenue:0;
 const plantingCost=year===0?treesPlanted*scenario.plantingCostPerTree:0;
 const maintenanceCost=year>0?survivingTrees*scenario.annualMaintenancePerTree:0;
 const programCost=year>0?scenario.farmers*scenario.annualProgramCostPerFarmer:0;
 const totalCost=plantingCost+maintenanceCost+programCost;
 cumulative+=revenue-totalCost;
-return{year,revenue,costOutflow:-totalCost,cumulative}
+return{year,revenue,earnedRevenue,costOutflow:-totalCost,cumulative}
 });
-const totals=rows.reduce((s,r)=>({revenue:s.revenue+r.revenue,cost:s.cost+Math.abs(r.costOutflow),surplus:s.surplus+r.revenue+r.costOutflow}),{revenue:0,cost:0,surplus:0});
+const totals=rows.reduce((s,r)=>({revenue:s.revenue+r.revenue,earnedRevenue:s.earnedRevenue+r.earnedRevenue,cost:s.cost+Math.abs(r.costOutflow),surplus:s.surplus+r.revenue+r.costOutflow}),{revenue:0,earnedRevenue:0,cost:0,surplus:0});
+const minRow=rows.reduce((min,r)=>r.cumulative<min.cumulative?r:min,rows[0]);
+const recoveryRow=rows.find(r=>r.year>0&&r.cumulative>=0);
 const status=totals.surplus>25000?"Positive":totals.surplus>-25000?"Near break-even":"Not viable";
-return{survivingTrees,treesPerCreditAtMaturity:1/scenario.carbonPerTreeAtMaturity,rows,totals,status}
+return{survivingTrees,treesPerCreditAtMaturity:1/scenario.carbonPerTreeAtMaturity,rows,totals,status,minRow,recoveryYear:recoveryRow?recoveryRow.year:null,firstPaymentYear}
 }
 /* Refresh all outputs after each input change */
 function update(){
 const m=model();
-for(const[key,,,,,prefix,suffix]of controls){document.getElementById(`val-${key}`).textContent=`${prefix}${fmtNum(inputs[key])}${suffix}`}
+for(const[key,,,,,prefix,suffix]of controls){
+const el=document.getElementById(`val-${key}`);
+if(el)el.textContent=`${prefix}${fmtNum(inputs[key])}${suffix}`;
+const inputEl=document.getElementById(`input-${key}`);
+if(inputEl)inputEl.value=inputs[key];
+}
+document.getElementById("stage-1A").classList.toggle("collapsed",activeStage!=="1A");
+document.getElementById("stage-1B").classList.toggle("collapsed",activeStage!=="1B");
+document.getElementById("summary-1A").textContent=`Carbon price: ${fmtMoney(inputs.carbonPrice)} | Project length: ${inputs.projectYears} years`;
+document.getElementById("summary-1B").textContent=activeStage==="1B"?`Carbon cash begins in Year ${inputs.firstPaymentYear}`:"Add one realism layer: carbon cash does not start immediately.";
+document.getElementById("chart-title").textContent=activeStage==="1B"?"Revenue timing and simple costs":"Revenue and simple costs";
+document.getElementById("chart-subtitle").textContent=activeStage==="1B"?"Costs begin immediately. Carbon cash starts in the first payment year, and the line shows the cumulative funding gap or surplus.":"Revenue is positive, costs are negative, and the line shows cumulative revenue minus costs.";
 document.getElementById("stat-surviving").textContent=fmtNum(m.survivingTrees);
-document.getElementById("stat-revenue-label").textContent=`${inputs.projectYears}-year carbon revenue`;
+document.getElementById("stat-revenue-label").textContent=activeStage==="1B"?`${inputs.projectYears}-year carbon cash received`:`${inputs.projectYears}-year carbon revenue`;
 document.getElementById("stat-total-revenue").textContent=fmtMoney(m.totals.revenue);
-document.getElementById("stat-total-revenue-note").textContent=`At ${fmtMoney(inputs.carbonPrice)} per credit`;
+document.getElementById("stat-total-revenue-note").textContent=activeStage==="1B"?`Cash begins in Year ${m.firstPaymentYear}`:`At ${fmtMoney(inputs.carbonPrice)} per credit`;
 document.getElementById("stat-surplus-label").textContent=`${inputs.projectYears}-year cumulative position`;
 document.getElementById("stat-total-surplus").textContent=fmtMoney(m.totals.surplus);
 document.getElementById("context-credit").textContent=`About ${fmtNum(m.treesPerCreditAtMaturity)} mature trees create roughly one carbon credit per year in this simplified example.`;
@@ -340,11 +395,13 @@ const statusEl=document.getElementById("status");
 const cls=m.status==="Positive"?"positive":m.status==="Near break-even"?"near":"negative";
 const dot=m.status==="Positive"?"🟢":m.status==="Near break-even"?"🟡":"🔴";
 statusEl.className=`status ${cls}`;
-statusEl.innerHTML=`<div class="label">Project status</div><div class="status-main">${dot} ${m.status}</div><p>Cumulative position: <strong>${fmtMoney(m.totals.surplus)}</strong></p>`;
-const data={labels:m.rows.map(r=>`Year ${r.year}`),datasets:[{type:"bar",label:"Annual revenue",data:m.rows.map(r=>r.revenue),backgroundColor:"#059669",borderRadius:{topLeft:8,topRight:8}},{type:"bar",label:"Annual simple costs",data:m.rows.map(r=>r.costOutflow),backgroundColor:"#ea580c",borderRadius:{bottomLeft:8,bottomRight:8}},{type:"line",label:"Cumulative position",data:m.rows.map(r=>r.cumulative),borderColor:"#2563eb",backgroundColor:"#2563eb",borderWidth:4,pointRadius:0,tension:.3,pointStyle:"line"}]};
+const gapText=activeStage==="1B"?`<p>Largest early funding gap: <strong>${fmtMoney(m.minRow.cumulative)}</strong> in Year ${m.minRow.year}</p>`:"";
+statusEl.innerHTML=`<div class="label">Project status</div><div class="status-main">${dot} ${m.status}</div><p>Cumulative position: <strong>${fmtMoney(m.totals.surplus)}</strong></p>${gapText}`;
+const data={labels:m.rows.map(r=>`Year ${r.year}`),datasets:[{type:"bar",label:activeStage==="1B"?"Carbon cash received":"Annual revenue",data:m.rows.map(r=>r.revenue),backgroundColor:"#059669",borderRadius:{topLeft:8,topRight:8}},{type:"bar",label:"Annual simple costs",data:m.rows.map(r=>r.costOutflow),backgroundColor:"#ea580c",borderRadius:{bottomLeft:8,bottomRight:8}},{type:"line",label:"Cumulative position",data:m.rows.map(r=>r.cumulative),borderColor:"#2563eb",backgroundColor:"#2563eb",borderWidth:4,pointRadius:0,tension:.3,pointStyle:"line"}]};
 const options={responsive:true,maintainAspectRatio:false,interaction:{mode:"index",intersect:false},plugins:{legend:{display:true,labels:{usePointStyle:true,boxWidth:40,padding:10}}},layout:{padding:{top:0,bottom:0}},scales:{x:{grid:{color:"#e2e8f0"}},y:{ticks:{callback:(v)=>fmtMoney(v)},grid:{color:"#e2e8f0"}}}};
 if(mainChart)mainChart.destroy();
 mainChart=new Chart(document.getElementById("mainChart"),{data,options});
+buildSensitivityTable();
 }
 
 /* Build sensitivity table for carbon price and project length combinations */
@@ -369,7 +426,7 @@ const body=`<tbody>${prices.map(price=>`<tr><td>${fmtMoney(price)}/credit</td>${
 document.getElementById("sensitivity-table").innerHTML=header+body;
 }
 
-buildStatic();update();buildSensitivityTable();
+buildStatic();update();
 </script>
 </body>
 </html>
