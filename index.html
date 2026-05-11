@@ -362,7 +362,7 @@ statusEl.className=`status ${cls}`;
 statusEl.innerHTML=`<div class="label">Project status</div><div class="status-main">${dot} ${m.status}</div><p>Cumulative cash position: <strong>${fmtMoney(m.totals.surplus)}</strong></p>`;
 const fundingEl=document.getElementById("funding-gap-card");
 fundingEl.classList.toggle("active",activeStage==="1B");
-fundingEl.innerHTML=`<div class="label">Stage 1B funding gap</div><div class="status-main">${fmtMoney(m.minRow.cumulative)} in Year ${m.minRow.year}</div><p>This is the lowest cumulative cash position before revenues catch up. It approximates the funding the project may need to survive the early years.</p>${m.recoveryYear?`<p>Returns to break-even in Year ${m.recoveryYear}.</p>`:`<p>Does not return to break-even within ${inputs.projectYears} years.</p>`}`;
+fundingEl.innerHTML=`<div class="label">Stage 1B funding gap</div><div class="status-main">${fmtMoney(m.minRow.cumulative)} in Year ${m.minRow.year}</div><p>This approximates the maximum funding the project may need during the project. It approximates the funding the project may need to survive the early years.</p>${m.recoveryYear?`<p>Returns to break-even in Year ${m.recoveryYear}.</p>`:`<p>Does not return to break-even within ${inputs.projectYears} years.</p>`}`;
 document.getElementById("stage1b-toggle").textContent=activeStage==="1B"?"Return to Stage 1A: Basic economics":"Explore Stage 1B: Financing gap";
 document.getElementById("chart-subtitle").textContent=activeStage==="1B"?"The shaded area shows years when the project is below break-even. The highlighted point is the maximum funding gap.":"Revenue is positive, costs are negative, and the line shows cumulative revenue minus costs.";
 const cumulativeData=m.rows.map(r=>r.cumulative);
