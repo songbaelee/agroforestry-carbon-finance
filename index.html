@@ -360,6 +360,7 @@ const baseSurplus=totals.surplus;
 const status=baseSurplus>25000?"Positive":baseSurplus>-25000?"Near break-even":"Not viable";
 const minRow=rows.reduce((min,r)=>r.cumulative<min.cumulative?r:min,rows[0]);
 const recoveryRow=rows.find(r=>r.year>minRow.year&&r.cumulative>=0);
+const recoveryYear=recoveryRow?recoveryRow.year:null;
 let cumulativeFinancingCost=0;
 const financingRows=rows.map(r=>{
 const annualFinancingCost=r.cumulative<0?Math.abs(r.cumulative)*(inputs.financingRate/100):0;
@@ -372,7 +373,7 @@ const financedRecoveryRow=financingRows.find(r=>r.year>minRow.year&&r.cumulative
 const financedRecoveryYear=financedRecoveryRow?financedRecoveryRow.year:null;
 const financingDelay=(recoveryYear!==null&&financedRecoveryYear!==null)?financedRecoveryYear-recoveryYear:null;
 
-return{survivingTrees,treesPerCreditAtMaturity:1/scenario.carbonPerTreeAtMaturity,rows,totals,status,minRow,recoveryYear:recoveryRow?recoveryRow.year:null,financingRows,financingCost,surplusAfterFinancing,financedRecoveryYear,financingDelay}
+return{survivingTrees,treesPerCreditAtMaturity:1/scenario.carbonPerTreeAtMaturity,rows,totals,status,minRow,recoveryYear,financingRows,financingCost,surplusAfterFinancing,financedRecoveryYear,financingDelay}
 }
 /* Refresh all outputs after each input change */
 function update(){
@@ -386,16 +387,18 @@ document.getElementById("stat-surplus-label").textContent=`${inputs.projectYears
 document.getElementById("stat-total-surplus").textContent=fmtMoney(m.totals.surplus);
 document.getElementById("context-credit").textContent=`About ${fmtNum(m.treesPerCreditAtMaturity)} mature trees create roughly one carbon credit per year in this simplified example.`;
 const statusEl=document.getElementById("status");
-const cls=m.status==="Positive"?"positive":m.status==="Near break-even"?"near":"negative";
-const dot=m.status==="Positive"?"🟢":m.status==="Near break-even"?"🟡":"🔴";
+const activeSurplus=activeStage==="1C"?m.surplusAfterFinancing:m.totals.surplus;
+const activeStatus=activeSurplus>25000?"Positive":activeSurplus>-25000?"Near break-even":"Not viable";
+const cls=activeStatus==="Positive"?"positive":activeStatus==="Near break-even"?"near":"negative";
+const dot=activeStatus==="Positive"?"🟢":activeStatus==="Near break-even"?"🟡":"🔴";
 statusEl.className=`status ${cls}`;
-statusEl.innerHTML=`<div class="label">Project status</div><div class="status-main">${dot} ${m.status}</div><p>Cumulative cash position: <strong>${fmtMoney(m.totals.surplus)}</strong></p>`;
+statusEl.innerHTML=`<div class="label">Project status</div><div class="status-main">${dot} ${activeStatus}</div><p>Cumulative cash position: <strong>${fmtMoney(activeSurplus)}</strong></p>`;
 const fundingEl=document.getElementById("funding-gap-card");
 fundingEl.classList.toggle("active",activeStage==="1B"||activeStage==="1C");
 fundingEl.innerHTML=`<div class="label">Stage 1B funding gap</div><div class="status-main">${fmtMoney(m.minRow.cumulative)} in Year ${m.minRow.year}</div><p>This approximates the maximum funding the project may need during the project. It approximates the funding the project may need to survive the early years.</p>${m.recoveryYear?`<p>Returns to break-even in Year ${m.recoveryYear}.</p>`:`<p>Does not return to break-even within ${inputs.projectYears} years.</p>`}`;
 const financingEl=document.getElementById("financing-cost-card");
 financingEl.classList.toggle("active",activeStage==="1C");
-financingEl.innerHTML=`<div class="label">Stage 1C financing cost</div><div class="status-main">Financing cost delays break-even by ${m.financingDelay} years</div><p>Without financing cost: Year ${m.recoveryYear ?? "Not reached"}.</p><p>With financing cost: Year ${m.financedRecoveryYear ?? "Not reached"}.</p>`;
+financingEl.innerHTML=`<div class="label">Stage 1C financing cost</div><div class="status-main">${m.financingDelay===null?"Financed break-even is not reached":"Financing cost delays break-even by "+m.financingDelay+" years"}</div><p>Without financing cost: Year ${m.recoveryYear ?? "Not reached"}.</p><p>With financing cost: Year ${m.financedRecoveryYear ?? "Not reached"}.</p>`;
 document.getElementById("stage1b-toggle").textContent=activeStage==="1B"?"Return to Stage 1A: Basic economics":"Explore Stage 1B: Financing gap";
 const stage1cBtn=document.getElementById("stage1c-toggle");
 stage1cBtn.textContent=activeStage==="1C"?"Return to Stage 1B: Funding gap":"Explore Stage 1C: Financing cost";
