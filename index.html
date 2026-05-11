@@ -129,6 +129,9 @@ Stage 1A with Stage 1B reveal • Version 0.2 • May 2026
 <h2>Revenue and simple costs</h2>
 <p id="chart-subtitle">Revenue is positive, costs are negative, and the line shows cumulative revenue minus costs.</p>
 <div class="chart-wrap"><canvas id="mainChart"></canvas></div>
+<p id="stage1b-caption" class="note stage1b-caption" style="display:none;margin-top:14px;">
+Stage 1B does not add a new input. It reveals how to read the same cumulative line as a funding gap.
+</p>
 </div>
 
 <!-- RIGHT TOP STACK: STATUS AND INPUT CONTROLS -->
@@ -148,7 +151,7 @@ Stage 1A with Stage 1B reveal • Version 0.2 • May 2026
 <div id="controls"></div>
 <div class="stage-reveal">
 <button id="stage1b-toggle" onclick="toggleStage1B()">Explore Stage 1B: Financing gap</button>
-<div class="note">Stage 1B does not add a new input. It reveals how to read the same cumulative line as a funding gap.</div>
+
 </div>
 </div>
 </div>
@@ -366,6 +369,7 @@ fundingEl.classList.toggle("active",activeStage==="1B");
 fundingEl.innerHTML=`<div class="label">Stage 1B funding gap</div><div class="status-main">${fmtMoney(m.minRow.cumulative)} in Year ${m.minRow.year}</div><p>This approximates the maximum funding the project may need during the project. It approximates the funding the project may need to survive the early years.</p>${m.recoveryYear?`<p>Returns to break-even in Year ${m.recoveryYear}.</p>`:`<p>Does not return to break-even within ${inputs.projectYears} years.</p>`}`;
 document.getElementById("stage1b-toggle").textContent=activeStage==="1B"?"Return to Stage 1A: Basic economics":"Explore Stage 1B: Financing gap";
 document.getElementById("chart-subtitle").textContent=activeStage==="1B"?"The shaded area shows years when the project is below break-even. The highlighted point is the maximum funding gap.":"Revenue is positive, costs are negative, and the line shows cumulative revenue minus costs.";
+document.getElementById("stage1b-caption").style.display=activeStage==="1B"?"block":"none";
 const cumulativeData=m.rows.map(r=>r.cumulative);
 const minPointData=m.rows.map(r=>r.year===m.minRow.year?m.minRow.cumulative:null);
 const datasets=[{type:"bar",label:"Annual revenue",data:m.rows.map(r=>r.revenue),backgroundColor:"#059669",borderRadius:{topLeft:8,topRight:8}},{type:"bar",label:"Annual simple costs",data:m.rows.map(r=>r.costOutflow),backgroundColor:"#ea580c",borderRadius:{bottomLeft:8,bottomRight:8}}];
