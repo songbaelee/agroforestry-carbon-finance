@@ -135,7 +135,7 @@ Stage 1A with Stage 1B and 1C reveals • Version 0.3 • May 2026
 <p id="chart-subtitle">Revenue is positive, costs are negative, and the line shows cumulative revenue minus costs.</p>
 <div class="chart-wrap"><canvas id="mainChart"></canvas></div>
 <p id="stage1b-caption" class="note stage1b-caption" style="display:none;margin-top:32px;font-size:16px;line-height:1.6;">
-Stage 1B does not add a new input. It reveals how to read the same cumulative line as a funding gap.
+Stage 1C shows that surviving early losses is not free. Financing the funding gap can delay project break-even.
 </p>
 </div>
 
@@ -356,7 +356,8 @@ cumulative+=revenue-totalCost;
 return{year,revenue,costOutflow:-totalCost,cumulative}
 });
 const totals=rows.reduce((s,r)=>({revenue:s.revenue+r.revenue,cost:s.cost+Math.abs(r.costOutflow),surplus:s.surplus+r.revenue+r.costOutflow}),{revenue:0,cost:0,surplus:0});
-const status=totals.surplus>25000?"Positive":totals.surplus>-25000?"Near break-even":"Not viable";
+const baseSurplus=totals.surplus;
+const status=baseSurplus>25000?"Positive":baseSurplus>-25000?"Near break-even":"Not viable";
 const minRow=rows.reduce((min,r)=>r.cumulative<min.cumulative?r:min,rows[0]);
 const recoveryRow=rows.find(r=>r.year>minRow.year&&r.cumulative>=0);
 let cumulativeFinancingCost=0;
@@ -367,7 +368,11 @@ return{year:r.year,annualFinancingCost,cumulativeFinancingCost,cumulativeAfterFi
 });
 const financingCost=financingRows.length?financingRows[financingRows.length-1].cumulativeFinancingCost:0;
 const surplusAfterFinancing=totals.surplus-financingCost;
-return{survivingTrees,treesPerCreditAtMaturity:1/scenario.carbonPerTreeAtMaturity,rows,totals,status,minRow,recoveryYear:recoveryRow?recoveryRow.year:null,financingRows,financingCost,surplusAfterFinancing}
+const financedRecoveryRow=financingRows.find(r=>r.year>minRow.year&&r.cumulativeAfterFinancing>=0);
+const financedRecoveryYear=financedRecoveryRow?financedRecoveryRow.year:null;
+const financingDelay=(recoveryYear!==null&&financedRecoveryYear!==null)?financedRecoveryYear-recoveryYear:null;
+
+return{survivingTrees,treesPerCreditAtMaturity:1/scenario.carbonPerTreeAtMaturity,rows,totals,status,minRow,recoveryYear:recoveryRow?recoveryRow.year:null,financingRows,financingCost,surplusAfterFinancing,financedRecoveryYear,financingDelay}
 }
 /* Refresh all outputs after each input change */
 function update(){
@@ -390,12 +395,18 @@ fundingEl.classList.toggle("active",activeStage==="1B"||activeStage==="1C");
 fundingEl.innerHTML=`<div class="label">Stage 1B funding gap</div><div class="status-main">${fmtMoney(m.minRow.cumulative)} in Year ${m.minRow.year}</div><p>This approximates the maximum funding the project may need during the project. It approximates the funding the project may need to survive the early years.</p>${m.recoveryYear?`<p>Returns to break-even in Year ${m.recoveryYear}.</p>`:`<p>Does not return to break-even within ${inputs.projectYears} years.</p>`}`;
 const financingEl=document.getElementById("financing-cost-card");
 financingEl.classList.toggle("active",activeStage==="1C");
-financingEl.innerHTML=`<div class="label">Stage 1C financing cost</div><div class="status-main">${fmtMoney(m.financingCost)} estimated cost</div><p>This simple estimate applies a ${inputs.financingRate}% annual cost to each year the cumulative cash position is below zero.</p><p>After this financing cost, the cumulative position becomes <strong>${fmtMoney(m.surplusAfterFinancing)}</strong>.</p>`;
+financingEl.innerHTML=`<div class="label">Stage 1C financing cost</div><div class="status-main">Financing cost delays break-even by ${m.financingDelay} years</div><p>Without financing cost: Year ${m.recoveryYear ?? "Not reached"}.</p><p>With financing cost: Year ${m.financedRecoveryYear ?? "Not reached"}.</p>`;
 document.getElementById("stage1b-toggle").textContent=activeStage==="1B"?"Return to Stage 1A: Basic economics":"Explore Stage 1B: Financing gap";
-document.getElementById("stage1c-toggle").textContent=activeStage==="1C"?"Return to Stage 1B: Funding gap":"Explore Stage 1C: Financing cost";
+const stage1cBtn=document.getElementById("stage1c-toggle");
+stage1cBtn.textContent=activeStage==="1C"?"Return to Stage 1B: Funding gap":"Explore Stage 1C: Financing cost";
+stage1cBtn.classList.toggle("secondary-stage",activeStage!=="1C");
 document.getElementById("stage1c-control").classList.toggle("active",activeStage==="1C");
 document.getElementById("chart-subtitle").textContent=activeStage==="1C"?"Stage 1C adds a simple financing-cost line: early deficits can keep dragging down the project even after revenues improve.":activeStage==="1B"?"The shaded area shows years when the project is below break-even. The highlighted point is the maximum funding gap.":"Revenue is positive, costs are negative, and the line shows cumulative revenue minus costs.";
-document.getElementById("stage1b-caption").style.display=activeStage==="1B"||activeStage==="1C"?"block":"none";
+const captionEl=document.getElementById("stage1b-caption");
+captionEl.style.display=activeStage==="1B"||activeStage==="1C"?"block":"none";
+captionEl.textContent=activeStage==="1C"
+?"Stage 1C shows that surviving early losses is not free. Financing the funding gap can delay project break-even."
+:"Stage 1B does not add a new input. It reveals how to read the same cumulative line as a funding gap.";
 const cumulativeData=m.rows.map(r=>r.cumulative);
 const minPointData=m.rows.map(r=>r.year===m.minRow.year?m.minRow.cumulative:null);
 const datasets=[{type:"bar",label:"Annual revenue",data:m.rows.map(r=>r.revenue),backgroundColor:"#059669",borderRadius:{topLeft:8,topRight:8}},{type:"bar",label:"Annual simple costs",data:m.rows.map(r=>r.costOutflow),backgroundColor:"#ea580c",borderRadius:{bottomLeft:8,bottomRight:8}}];
