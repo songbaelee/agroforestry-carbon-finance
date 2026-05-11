@@ -74,6 +74,14 @@ li{margin-bottom:8px;line-height:1.6;color:var(--muted)}
 .sensitivity-near{background:#fffbeb;color:#78350f;font-weight:800}
 .sensitivity-negative{background:#fff1f2;color:#881337;font-weight:800}
 
+
+/* Related resources section */
+.resource-group{margin-top:1.25rem}
+.resource-group h3,.resource-note h3{margin-bottom:.4rem;font-size:1rem}
+.resource-group ul{margin-top:.25rem;padding-left:1.25rem}
+.resource-group li{margin-bottom:.35rem}
+.resource-note{margin-top:1.5rem;padding:1rem;background:#f8fafc;border:1px solid var(--line);border-radius:16px}
+
 @media(max-width:1000px){.main{grid-template-columns:1fr;grid-template-areas:"chart" "sideTop" "below" "context"}.assumption-grid{grid-template-columns:repeat(2,1fr)}.stats{grid-template-columns:1fr}.toprow{flex-direction:column}}
 /* Mobile layout */
 </style>
@@ -202,6 +210,64 @@ The tool was built iteratively using ChatGPT, Chart.js, GitHub Pages, and a down
 </p>
 </div>
 </section>
+
+
+<!-- RELATED TOOLS AND FURTHER EXPLORATION -->
+<section class="sensitivity-section">
+<div class="card sensitivity-card">
+<h2>Related tools and further exploration</h2>
+
+<p>
+Most tools are either climate-first or finance-first. This project aims to sit between the two:
+a simple translation layer for understanding how agroforestry carbon project design, timing,
+revenue, and financing interact.
+</p>
+
+<details style="margin-top:18px;">
+<summary style="cursor:pointer;font-weight:700;">
+Explore related tools and resources
+</summary>
+
+<div class="resource-group">
+<h3>Farm carbon and footprint tools</h3>
+<ul>
+<li><a href="https://calculator.farmcarbontoolkit.org.uk/" target="_blank" rel="noopener noreferrer">Farm Carbon Calculator</a></li>
+<li><a href="https://coolfarm.org/" target="_blank" rel="noopener noreferrer">Cool Farm Tool</a></li>
+<li><a href="https://www.agrecalc.com/" target="_blank" rel="noopener noreferrer">Agrecalc</a></li>
+</ul>
+</div>
+
+<div class="resource-group">
+<h3>Forest and carbon stock tools</h3>
+<ul>
+<li><a href="https://winrock.org/flr-calculator/" target="_blank" rel="noopener noreferrer">FLR Carbon Storage Calculator</a></li>
+<li><a href="https://research.fs.usda.gov/pnw/products/dataandtools/forest-sector-carbon-calculator" target="_blank" rel="noopener noreferrer">Forest Sector Carbon Calculator</a></li>
+<li><a href="https://northeastforestcarbon.org/forest-carbon-estimators-and-calculators/" target="_blank" rel="noopener noreferrer">Forest Carbon Estimators and Calculators</a></li>
+</ul>
+</div>
+
+<div class="resource-group">
+<h3>Financial models and project economics</h3>
+<ul>
+<li><a href="https://www.opf.degree/insights/financial-modeling-analysis-for-agroforestry-project" target="_blank" rel="noopener noreferrer">OnePointFive Agroforestry Financial Modeling Case Study</a></li>
+<li><a href="https://organic-farmknowledge.org/tool/54767" target="_blank" rel="noopener noreferrer">Farm-SAFE Agroforestry Economic Model</a></li>
+</ul>
+</div>
+
+<div class="resource-note">
+<h3>How this tool is different</h3>
+<p>
+Most existing tools focus on carbon accounting, emissions footprints, forest carbon estimation,
+or detailed financial modeling. This project is different. It is designed as an intuition-first
+learning system to help users understand the basic economics of agroforestry carbon finance before
+moving into more technical tools.
+</p>
+</div>
+
+</details>
+</div>
+</section>
+
 
 </main>
 
