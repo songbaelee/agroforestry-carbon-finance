@@ -392,7 +392,7 @@ const activeStatus=activeSurplus>25000?"Positive":activeSurplus>-25000?"Near bre
 const cls=activeStatus==="Positive"?"positive":activeStatus==="Near break-even"?"near":"negative";
 const dot=activeStatus==="Positive"?"🟢":activeStatus==="Near break-even"?"🟡":"🔴";
 statusEl.className=`status ${cls}`;
-statusEl.innerHTML=`<div class="label">Project status</div><div class="status-main">${dot} ${activeStatus}</div><p>Cumulative cash position: <strong>${fmtMoney(activeSurplus)}</strong></p>`;
+statusEl.innerHTML=`<div class="label">Project status</div><div class="status-main">${dot} ${activeStatus}</div><p>${inputs.projectYears}-year cumulative cash position: <strong>${fmtMoney(activeSurplus)}</strong></p>`;
 const fundingEl=document.getElementById("funding-gap-card");
 fundingEl.classList.toggle("active",activeStage==="1B"||activeStage==="1C");
 fundingEl.innerHTML=`<div class="label">Stage 1B funding gap</div><div class="status-main">${fmtMoney(m.minRow.cumulative)} in Year ${m.minRow.year}</div><p>This approximates the maximum funding the project may need during the project. It approximates the funding the project may need to survive the early years.</p>${m.recoveryYear?`<p>Returns to break-even in Year ${m.recoveryYear}.</p>`:`<p>Does not return to break-even within ${inputs.projectYears} years.</p>`}`;
