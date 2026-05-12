@@ -39,6 +39,12 @@ button{border:1px solid var(--line);background:#fff;padding:10px 14px;border-rad
 /* Content cards and chart container */
 .card{padding:22px;margin-bottom:20px}
 .chart-wrap{height:430px}
+.custom-legend{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;margin:12px 0 8px;font-size:13px;color:var(--muted)}
+.legend-item{display:flex;align-items:center;gap:7px;white-space:nowrap}
+.legend-swatch{display:inline-block;width:34px;height:10px;border-radius:3px}
+.legend-line{display:inline-block;width:38px;height:0;border-top:4px solid}
+.legend-line.dashed{border-top-style:dashed}
+.legend-dot{display:inline-block;width:12px;height:12px;border-radius:999px;background:#0f172a}
 /* Slider controls */
 .control{margin:24px 0}
 .control-head{display:flex;justify-content:space-between;align-items:start;gap:12px;margin-bottom:8px}
@@ -135,6 +141,7 @@ Stage 1A with Stage 1B, 1C, and 1D reveals • Version 0.4 • May 2026
 <div class="card chart-card">
 <h2>Revenue and simple costs</h2>
 <p id="chart-subtitle">Revenue is positive, costs are negative, and the line shows cumulative revenue minus costs.</p>
+<div id="custom-legend" class="custom-legend"></div>
 <div class="chart-wrap"><canvas id="mainChart"></canvas></div>
 <p id="stage1b-caption" class="note stage1b-caption" style="display:none;margin-top:32px;font-size:16px;line-height:1.6;">
 Stage 1C shows that surviving early losses is not free. Financing the funding gap can delay project break-even.
@@ -470,6 +477,21 @@ captionEl.textContent=activeStage==="1D"
 :activeStage==="1C"
 ?"Stage 1C shows that surviving early losses is not free. Financing the funding gap can delay project break-even."
 :"Stage 1B does not add a new input. It reveals how to read the same cumulative line as a funding gap.";
+const legendItems=[
+`<span class="legend-item"><span class="legend-swatch" style="background:#059669"></span>Annual revenue received</span>`,
+`<span class="legend-item"><span class="legend-swatch" style="background:#ea580c"></span>Annual simple costs</span>`,
+`<span class="legend-item"><span class="legend-line" style="border-color:#2563eb"></span>Cumulative cash position</span>`
+];
+if(activeStage==="1D"){
+legendItems.push(`<span class="legend-item"><span class="legend-line dashed" style="border-color:#0f766e"></span>With payment delay</span>`);
+}
+if(activeStage==="1C"){
+legendItems.push(`<span class="legend-item"><span class="legend-line dashed" style="border-color:#0f172a"></span>With financing cost</span>`);
+}
+if(activeStage==="1B"||activeStage==="1C"||activeStage==="1D"){
+legendItems.push(`<span class="legend-item"><span class="legend-dot"></span>Maximum funding gap</span>`);
+}
+document.getElementById("custom-legend").innerHTML=legendItems.join("");
 const cumulativeData=m.rows.map(r=>r.cumulative);
 const minPointData=m.rows.map(r=>r.year===m.minRow.year?m.minRow.cumulative:null);
 const datasets=[{type:"bar",label:activeStage==="1D"?"Annual revenue received":"Annual revenue",data:m.rows.map(r=>r.revenue),backgroundColor:"#059669",borderRadius:{topLeft:8,topRight:8}},{type:"bar",label:"Annual simple costs",data:m.rows.map(r=>r.costOutflow),backgroundColor:"#ea580c",borderRadius:{bottomLeft:8,bottomRight:8}}];
@@ -494,7 +516,7 @@ order:1
 if(activeStage==="1C"){datasets.push({type:"line",label:"With financing cost",data:m.financingRows.map(r=>r.cumulativeAfterFinancing),borderColor:"#0f172a",backgroundColor:"#0f172a",borderWidth:3,borderDash:[14,6],pointRadius:0,tension:.3,pointStyle:"line",order:2});}
 if(activeStage==="1B"||activeStage==="1C"||activeStage==="1D"){datasets.push({type:"line",label:"Maximum funding gap",data:minPointData,borderColor:"#0f172a",backgroundColor:"#0f172a",borderWidth:0,pointRadius:7,pointHoverRadius:9,showLine:false,spanGaps:false,order:-1});}
 const data={labels:m.rows.map(r=>`Year ${r.year}`),datasets};
-const options={responsive:true,maintainAspectRatio:false,interaction:{mode:"index",intersect:false},plugins:{legend:{display:true,labels:{usePointStyle:false,boxWidth:70,padding:14,filter:(item)=>item.text!=="Below break-even area"}}},layout:{padding:{top:0,bottom:0}},scales:{x:{grid:{color:"#e2e8f0"}},y:{ticks:{callback:(v)=>fmtMoney(v)},grid:{color:"#e2e8f0"}}}};
+const options={responsive:true,maintainAspectRatio:false,interaction:{mode:"index",intersect:false},plugins:{legend:{display:false}},layout:{padding:{top:0,bottom:0}},scales:{x:{grid:{color:"#e2e8f0"}},y:{ticks:{callback:(v)=>fmtMoney(v)},grid:{color:"#e2e8f0"}}}};
 if(mainChart)mainChart.destroy();
 mainChart=new Chart(document.getElementById("mainChart"),{data,options});
 }
