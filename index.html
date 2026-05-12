@@ -151,15 +151,19 @@ Stage 1C shows that surviving early losses is not free. Financing the funding ga
 
 <!-- RIGHT TOP STACK: STATUS AND INPUT CONTROLS -->
 <div class="side-top">
+<!-- PROJECT STATUS CARD, FILLED BY JAVASCRIPT -->
+<div id="status" class="status"></div>
+
 <!-- INPUT CONTROLS CARD -->
 <div class="card controls-card">
-<div class="toprow">
-<div>
-<h2 style="font-size:18px;margin-bottom:0;">Stage 1A: Basic economics</h2>
-</div>
+<details id="stage1a-details" open>
+<summary style="cursor:pointer;font-weight:700;font-size:18px;">Stage 1A: Basic economics</summary>
+<div style="display:flex;justify-content:flex-end;margin-top:10px;">
 <button onclick="resetAll()">Reset all</button>
 </div>
 <div id="controls"></div>
+</details>
+
 <details id="stage1c-details" class="stage-extra-control">
 <summary style="cursor:pointer;font-weight:700;">Stage 1C controls</summary>
 <div id="stage1c-control"></div>
@@ -177,9 +181,6 @@ Stage 1C shows that surviving early losses is not free. Financing the funding ga
 
 </div>
 </div>
-
-<!-- PROJECT STATUS CARD, FILLED BY JAVASCRIPT -->
-<div id="status" class="status"></div>
 
 <!-- STAGE 1B FUNDING GAP CARD, REVEALED BY JAVASCRIPT -->
 <div id="funding-gap-card" class="status funding-gap-card stage-output-card"></div>
@@ -465,6 +466,8 @@ stage1dBtn.textContent="Stage 1D: Financing cost";
 stage1dBtn.classList.toggle("secondary-stage",activeStage!=="1D");
 document.getElementById("stage1c-details").classList.toggle("active",activeStage==="1C"||activeStage==="1D");
 document.getElementById("stage1d-details").classList.toggle("active",activeStage==="1D");
+
+document.getElementById("stage1a-details").open=activeStage==="1A"||activeStage==="1B";
 
 if(activeStage==="1C"){
 document.getElementById("stage1c-details").open=true;
