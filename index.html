@@ -73,6 +73,7 @@ input[type=range]{width:100%;accent-color:var(--green)}
 .verification-delay-card .status-main{color:#14532d}
 .stage-extra-control{display:none;margin-top:6px;padding-top:18px;border-top:1px solid var(--line)}
 .stage-extra-control.active{display:block}
+.stage-output-card{display:none!important}
 
 /* Summary stats beneath the chart */
 .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:0}
@@ -182,13 +183,13 @@ Stage 1C shows that surviving early losses is not free. Financing the funding ga
 <div id="status" class="status"></div>
 
 <!-- STAGE 1B FUNDING GAP CARD, REVEALED BY JAVASCRIPT -->
-<div id="funding-gap-card" class="status funding-gap-card"></div>
+<div id="funding-gap-card" class="status funding-gap-card stage-output-card"></div>
 
 <!-- STAGE 1C VERIFICATION DELAY CARD, REVEALED BY JAVASCRIPT -->
-<div id="verification-delay-card" class="status verification-delay-card"></div>
+<div id="verification-delay-card" class="status verification-delay-card stage-output-card"></div>
 
 <!-- STAGE 1D FINANCING COST CARD, REVEALED BY JAVASCRIPT -->
-<div id="financing-cost-card" class="status financing-cost-card"></div>
+<div id="financing-cost-card" class="status financing-cost-card stage-output-card"></div>
 </div>
 
 <!-- LOWER LEFT STACK: SUMMARY STATS AND NEXT STEPS -->
@@ -478,7 +479,7 @@ document.getElementById("chart-subtitle").textContent=activeStage==="1D"?"Stage 
 const captionEl=document.getElementById("stage1b-caption");
 captionEl.style.display=activeStage==="1B"||activeStage==="1C"||activeStage==="1D"?"block":"none";
 captionEl.textContent=activeStage==="1D"
-?"Stage 1D shows that once payments are delayed, the cost of financing the wider funding gap can push recovery even further out."
+?"Stage 1D adds financing cost on top of payment delay. The dashed black line shows how the cost of surviving the wider funding gap can push recovery further out."
 :activeStage==="1C"
 ?"Stage 1C compares the baseline cumulative cash position against the same project with delayed payments. Revenue is unchanged, but arriving later can deepen the funding gap and delay recovery."
 :"Stage 1B does not add a new input. It reveals how to read the same cumulative line as a funding gap.";
