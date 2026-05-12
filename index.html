@@ -155,8 +155,7 @@ Stage 1C shows that surviving early losses is not free. Financing the funding ga
 <div class="card controls-card">
 <div class="toprow">
 <div>
-<h2>Stage 1A: Basic economics</h2>
-<p class="note" style="margin:4px 0 0;">Start with two variables: carbon price and project length.</p>
+<h2 style="font-size:18px;margin-bottom:0;">Stage 1A: Basic economics</h2>
 </div>
 <button onclick="resetAll()">Reset all</button>
 </div>
@@ -336,7 +335,7 @@ let inputs={...defaults};
 let activeStage="1A";
 let mainChart=null;
 const growthCurve=[0,0.02,0.05,0.10,0.18,0.28,0.40,0.54,0.68,0.80,0.90,1,1,1,1,1,1,1,1,1,1];
-const controls=[["carbonPrice","Carbon price",5,60,1,"$","/credit","Higher prices increase revenue directly."],["projectYears","Project length",5,20,1,""," years","Longer timelines allow more carbon accumulation."]];
+const controls=[["carbonPrice","Carbon price",5,60,1,"$","/credit",""],["projectYears","Project length",5,20,1,""," years",""]];
 const stage1cControls=[["verificationDelay","Verification/payment delay",0,5,1,""," years","A simplified delay between carbon generation and cash received."]];
 const stage1dControls=[["financingRate","Annual financing cost",0,25,1,"","%","A simplified cost of borrowing or advancing funds while the project is below break-even."]];
 
@@ -356,9 +355,9 @@ document.getElementById("assumptions").innerHTML=[
 ["Survival rate",`${scenario.survivalRate}%`,"Fixed in Stage 1A"],
 ["Carbon per tree",`${scenario.carbonPerTreeAtMaturity} tCO₂/yr`,"At maturity"]
 ].map(([l,v,n])=>`<div class="assumption"><div class="label">${l}</div><div class="value">${v}</div><div class="note">${n}</div></div>`).join("");
-document.getElementById("controls").innerHTML=controls.map(([key,label,min,max,step,prefix,suffix,note])=>`<div class="control"><div class="control-head"><div><div style="font-weight:750;">${label}</div><div class="note">${note}</div></div><div class="control-right"><div class="control-value" id="val-${key}"></div><button class="mini-reset" onclick="resetOne('${key}')">Reset</button></div></div><input id="input-${key}" type="range" min="${min}" max="${max}" step="${step}" value="${inputs[key]}" oninput="setInput('${key}', Number(this.value))" /></div>`).join("");
-document.getElementById("stage1c-control").innerHTML=stage1cControls.map(([key,label,min,max,step,prefix,suffix,note])=>`<div class="control"><div class="control-head"><div><div style="font-weight:750;">${label}</div><div class="note">${note}</div></div><div class="control-right"><div class="control-value" id="val-${key}"></div><button class="mini-reset" onclick="resetOne('${key}')">Reset</button></div></div><input id="input-${key}" type="range" min="${min}" max="${max}" step="${step}" value="${inputs[key]}" oninput="setInput('${key}', Number(this.value))" /></div>`).join("");
-document.getElementById("stage1d-control").innerHTML=stage1dControls.map(([key,label,min,max,step,prefix,suffix,note])=>`<div class="control"><div class="control-head"><div><div style="font-weight:750;">${label}</div><div class="note">${note}</div></div><div class="control-right"><div class="control-value" id="val-${key}"></div><button class="mini-reset" onclick="resetOne('${key}')">Reset</button></div></div><input id="input-${key}" type="range" min="${min}" max="${max}" step="${step}" value="${inputs[key]}" oninput="setInput('${key}', Number(this.value))" /></div>`).join("");
+document.getElementById("controls").innerHTML=controls.map(([key,label,min,max,step,prefix,suffix,note])=>`<div class="control"><div class="control-head"><div><div style="font-weight:750;">${label}</div>${note?`<div class="note">${note}</div>`:""}</div><div class="control-right"><div class="control-value" id="val-${key}"></div><button class="mini-reset" onclick="resetOne('${key}')">Reset</button></div></div><input id="input-${key}" type="range" min="${min}" max="${max}" step="${step}" value="${inputs[key]}" oninput="setInput('${key}', Number(this.value))" /></div>`).join("");
+document.getElementById("stage1c-control").innerHTML=stage1cControls.map(([key,label,min,max,step,prefix,suffix,note])=>`<div class="control"><div class="control-head"><div><div style="font-weight:750;">${label}</div>${note?`<div class="note">${note}</div>`:""}</div><div class="control-right"><div class="control-value" id="val-${key}"></div><button class="mini-reset" onclick="resetOne('${key}')">Reset</button></div></div><input id="input-${key}" type="range" min="${min}" max="${max}" step="${step}" value="${inputs[key]}" oninput="setInput('${key}', Number(this.value))" /></div>`).join("");
+document.getElementById("stage1d-control").innerHTML=stage1dControls.map(([key,label,min,max,step,prefix,suffix,note])=>`<div class="control"><div class="control-head"><div><div style="font-weight:750;">${label}</div>${note?`<div class="note">${note}</div>`:""}</div><div class="control-right"><div class="control-value" id="val-${key}"></div><button class="mini-reset" onclick="resetOne('${key}')">Reset</button></div></div><input id="input-${key}" type="range" min="${min}" max="${max}" step="${step}" value="${inputs[key]}" oninput="setInput('${key}', Number(this.value))" /></div>`).join("");
 }
 /* Input handlers */
 function setInput(key,value){inputs[key]=value;update()}
@@ -498,16 +497,18 @@ if(activeStage==="1B"||activeStage==="1C"||activeStage==="1D"){
 legendItems.push(`<span class="legend-item"><span class="legend-dot"></span>Maximum funding gap</span>`);
 }
 document.getElementById("custom-legend").innerHTML=legendItems.join("");
+const chartYears=Array.from({length:21},(_,year)=>year);
+function padToTwenty(values){return chartYears.map((_,i)=>i<values.length?values[i]:null)}
 const cumulativeData=m.rows.map(r=>r.cumulative);
 const minPointData=m.rows.map(r=>r.year===m.minRow.year?m.minRow.cumulative:null);
-const datasets=[{type:"bar",label:(activeStage==="1C"||activeStage==="1D")?"Annual revenue received":"Annual revenue",data:m.rows.map(r=>r.revenue),backgroundColor:"#059669",borderRadius:{topLeft:8,topRight:8}},{type:"bar",label:"Annual simple costs",data:m.rows.map(r=>r.costOutflow),backgroundColor:"#ea580c",borderRadius:{bottomLeft:8,bottomRight:8}}];
-if(activeStage==="1B"||activeStage==="1C"||activeStage==="1D"){datasets.push({type:"line",label:"Below break-even area",data:cumulativeData.map(v=>v<0?v:0),fill:{target:{value:0}},borderColor:"rgba(234,88,12,0)",backgroundColor:"rgba(234,88,12,0.08)",pointRadius:0,tension:.3,spanGaps:true,order:10});}
-datasets.push({type:"line",label:"Cumulative cash position",data:(activeStage==="1C"||activeStage==="1D")?m.baselineRows.map(r=>r.cumulative):cumulativeData,borderColor:"#2563eb",backgroundColor:"#2563eb",borderWidth:4,pointRadius:0,tension:.3,pointStyle:"line",order:0});
+const datasets=[{type:"bar",label:(activeStage==="1C"||activeStage==="1D")?"Annual revenue received":"Annual revenue",data:padToTwenty(m.rows.map(r=>r.revenue)),backgroundColor:"#059669",borderRadius:{topLeft:8,topRight:8}},{type:"bar",label:"Annual simple costs",data:padToTwenty(m.rows.map(r=>r.costOutflow)),backgroundColor:"#ea580c",borderRadius:{bottomLeft:8,bottomRight:8}}];
+if(activeStage==="1B"||activeStage==="1C"||activeStage==="1D"){datasets.push({type:"line",label:"Below break-even area",data:padToTwenty(cumulativeData.map(v=>v<0?v:0)),fill:{target:{value:0}},borderColor:"rgba(234,88,12,0)",backgroundColor:"rgba(234,88,12,0.08)",pointRadius:0,tension:.3,spanGaps:true,order:10});}
+datasets.push({type:"line",label:"Cumulative cash position",data:padToTwenty((activeStage==="1C"||activeStage==="1D")?m.baselineRows.map(r=>r.cumulative):cumulativeData),borderColor:"#2563eb",backgroundColor:"#2563eb",borderWidth:4,pointRadius:0,tension:.3,pointStyle:"line",order:0});
 if(activeStage==="1C"||activeStage==="1D"){
 datasets.push({
 type:"line",
 label:"With payment delay",
-data:cumulativeData,
+data:padToTwenty(cumulativeData),
 borderColor:"#0f766e",
 backgroundColor:"#0f766e",
 borderWidth:3,
@@ -519,15 +520,10 @@ order:1
 });
 }
 
-if(activeStage==="1D"){datasets.push({type:"line",label:"With financing cost",data:m.financingRows.map(r=>r.cumulativeAfterFinancing),borderColor:"#0f172a",backgroundColor:"#0f172a",borderWidth:3,borderDash:[14,6],pointRadius:0,tension:.3,pointStyle:"line",order:2});}
-if(activeStage==="1B"||activeStage==="1C"||activeStage==="1D"){datasets.push({type:"line",label:"Maximum funding gap",data:minPointData,borderColor:"#0f172a",backgroundColor:"#0f172a",borderWidth:0,pointRadius:7,pointHoverRadius:9,showLine:false,spanGaps:false,order:-1});}
-const data={labels:m.rows.map(r=>`Year ${r.year}`),datasets};
-let yValues=[...m.rows.map(r=>r.revenue),...m.rows.map(r=>r.costOutflow),...cumulativeData];
-if(activeStage==="1C"||activeStage==="1D"){yValues=[...yValues,...m.baselineRows.map(r=>r.cumulative)];}
-if(activeStage==="1D"){yValues=[...yValues,...m.financingRows.map(r=>r.cumulativeAfterFinancing)];}
-const yMin=Math.floor(Math.min(...yValues,0)/100000)*100000;
-const yMax=Math.ceil(Math.max(...yValues,0)/100000)*100000;
-const options={responsive:true,maintainAspectRatio:false,interaction:{mode:"index",intersect:false},plugins:{legend:{display:false}},layout:{padding:{top:0,bottom:0}},scales:{x:{grid:{color:"#e2e8f0"}},y:{min:yMin,max:yMax,ticks:{callback:(v)=>fmtMoney(v)},grid:{color:"#e2e8f0"}}}};
+if(activeStage==="1D"){datasets.push({type:"line",label:"With financing cost",data:padToTwenty(m.financingRows.map(r=>r.cumulativeAfterFinancing)),borderColor:"#0f172a",backgroundColor:"#0f172a",borderWidth:3,borderDash:[14,6],pointRadius:0,tension:.3,pointStyle:"line",order:2});}
+if(activeStage==="1B"||activeStage==="1C"||activeStage==="1D"){datasets.push({type:"line",label:"Maximum funding gap",data:padToTwenty(minPointData),borderColor:"#0f172a",backgroundColor:"#0f172a",borderWidth:0,pointRadius:7,pointHoverRadius:9,showLine:false,spanGaps:false,order:-1});}
+const data={labels:chartYears.map(year=>`Year ${year}`),datasets};
+const options={responsive:true,maintainAspectRatio:false,interaction:{mode:"index",intersect:false},plugins:{legend:{display:false}},layout:{padding:{top:0,bottom:0}},scales:{x:{grid:{color:"#e2e8f0"}},y:{min:-500000,max:500000,ticks:{callback:(v)=>fmtMoney(v)},grid:{color:"#e2e8f0"}}}};
 if(mainChart)mainChart.destroy();
 mainChart=new Chart(document.getElementById("mainChart"),{data,options});
 }
