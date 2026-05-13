@@ -174,11 +174,11 @@ Stage 1C shows that surviving early losses is not free. Financing the funding ga
 
 <!-- INPUT CONTROLS CARD -->
 <div class="card controls-card">
-<details id="stage1a-details" class="stage-detail" open>
-<summary onclick="event.preventDefault(); setStage('1A')">Stage 1A: Basic economics</summary>
-<div style="display:flex;justify-content:flex-end;margin-top:10px;">
+<div style="display:flex;justify-content:flex-end;margin-bottom:12px;">
 <button onclick="resetAll()">Reset all</button>
 </div>
+<details id="stage1a-details" class="stage-detail" open>
+<summary onclick="event.preventDefault(); setStage('1A')">Stage 1A: Basic economics</summary>
 <div id="controls"></div>
 </details>
 
@@ -567,6 +567,7 @@ document.getElementById("sensitivity-table").innerHTML=header+body;
 }
 
 
+
 function initializeStageAccordion(){
   const stageDetails = [
     {id:"stage1a-details", stage:"1A"},
@@ -579,24 +580,19 @@ function initializeStageAccordion(){
   stageDetails.forEach(({id, stage})=>{
     const detail = document.getElementById(id);
     if(!detail) return;
-    const summary = detail.querySelector("summary");
-    if(!summary) return;
 
-    summary.addEventListener("click", (e)=>{
-      e.preventDefault();
-
-      if(detail.open){
-        detail.open = false;
-        return;
-      }
+    detail.addEventListener("toggle", ()=>{
+      if(!detail.open) return;
 
       stageDetails.forEach(({id: otherId})=>{
+        if(otherId === id) return;
         const other = document.getElementById(otherId);
         if(other) other.open = false;
       });
 
-      detail.open = true;
-      setStage(stage);
+      if(activeStage !== stage){
+        setStage(stage);
+      }
     });
   });
 }
