@@ -585,21 +585,18 @@ function initializeStageAccordion(){
     summary.addEventListener("click", (e)=>{
       e.preventDefault();
 
-      const wasOpen = detail.open;
+      if(detail.open){
+        detail.open = false;
+        return;
+      }
 
       stageDetails.forEach(({id: otherId})=>{
         const other = document.getElementById(otherId);
         if(other) other.open = false;
       });
 
-      if(!wasOpen){
-        detail.open = true;
-        setStage(stage);
-      }else{
-        detail.open = false;
-        activeStage = stage;
-        update();
-      }
+      detail.open = true;
+      setStage(stage);
     });
   });
 }
