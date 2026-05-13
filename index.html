@@ -512,7 +512,7 @@ order:1
 });
 }
 
-if(activeStage==="1D"||activeStage==="1E"){datasets.push({type:"line",label:"With financing cost",data:padToTwenty(m.financingRows.map(r=>r.cumulativeAfterFinancing)),borderColor:"#0f172a",backgroundColor:"#0f172a",borderWidth:3,borderDash:[14,6],pointRadius:0,tension:.3,pointStyle:"line",order:2});}
+if(activeStage==="1D"||activeStage==="1E"){datasets.push({type:"line",label:"With financing cost",data:padToTwenty(m.financingRows.map(r=>r.cumulativeAfterFinancing)),borderColor:"#0f172a",backgroundColor:"#0f172a",borderWidth:3,borderDash:[2,6],pointRadius:4,pointHoverRadius:6,pointStyle:"rectRot",order:2});}
 if(activeStage==="1B"||activeStage==="1C"||activeStage==="1D"||activeStage==="1E"||activeStage==="1E"){datasets.push({type:"line",label:"Maximum funding gap",data:padToTwenty(minPointData),borderColor:"#0f172a",backgroundColor:"#0f172a",borderWidth:0,pointRadius:7,pointHoverRadius:9,showLine:false,spanGaps:false,order:-1});}
 const data={labels:chartYears.map(year=>`Year ${year}`),datasets};
 const options={responsive:true,maintainAspectRatio:false,interaction:{mode:"index",intersect:false},plugins:{legend:{display:false}},layout:{padding:{top:0,bottom:0}},scales:{x:{grid:{color:"#e2e8f0"}},y:{min:-500000,max:500000,ticks:{callback:(v)=>fmtMoney(v)},grid:{color:"#e2e8f0"}}}};
@@ -546,6 +546,17 @@ document.getElementById("sensitivity-table").innerHTML=header+body;
 }
 
 buildStatic();update();buildSensitivityTable();
+
+document.querySelectorAll('details').forEach(d=>{
+  const summary=d.querySelector('summary');
+  if(summary){
+    summary.addEventListener('click',e=>{
+      e.preventDefault();
+      d.open=!d.open;
+    });
+  }
+});
+
 </script>
 </body>
 </html>
