@@ -516,7 +516,7 @@ captionEl.textContent=activeStage==="1D"
 :"Stage 1B does not add a new input. It reveals how to read the same cumulative line as a funding gap.";
 const legendItems=[
 `<span class="legend-item"><span class="legend-swatch" style="background:#059669"></span>${activeStage==="1E"?"Annual carbon revenue retained":"Annual carbon revenue received"}</span>`,
-`<span class="legend-item cost-legend-item" title="Includes planting, maintenance, and program operations${activeStage===\"1D\"?", plus financing-related costs":""}."><span class="legend-swatch" style="background:#ea580c"></span>Annual project costs ⓘ</span>`,
+`<span class="legend-item cost-legend-item" title="${activeStage==="1D"?"Includes planting, maintenance, program operations, and financing-related costs.":"Includes planting, maintenance, and program operations."}"><span class="legend-swatch" style="background:#ea580c"></span>Annual project costs ⓘ</span>`,
 `<span class="legend-item"><span class="legend-line" style="border-color:#2563eb"></span>Cumulative cash position</span>`
 ];
 if(activeStage==="1C"||activeStage==="1D"||activeStage==="1E"){
