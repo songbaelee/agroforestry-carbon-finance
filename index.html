@@ -178,27 +178,27 @@ Stage 1C shows that surviving early losses is not free. Financing the funding ga
 <button onclick="resetAll()">Reset all</button>
 </div>
 <details id="stage1a-details" class="stage-detail" open>
-<summary onclick="event.preventDefault(); setStage('1A')">Stage 1A: Basic economics</summary>
+<summary>Stage 1A: Basic economics</summary>
 <div id="controls"></div>
 </details>
 
 <details id="stage1b-details" class="stage-detail">
-<summary onclick="event.preventDefault(); setStage('1B')">Stage 1B: Funding gap</summary>
+<summary>Stage 1B: Funding gap</summary>
 
 </details>
 
 <details id="stage1c-details" class="stage-detail">
-<summary onclick="event.preventDefault(); setStage('1C')">Stage 1C: Verification delay</summary>
+<summary>Stage 1C: Verification delay</summary>
 <div id="stage1c-control"></div>
 </details>
 
 <details id="stage1d-details" class="stage-detail">
-<summary onclick="event.preventDefault(); setStage('1D')">Stage 1D: Financing cost</summary>
+<summary>Stage 1D: Financing cost</summary>
 <div id="stage1d-control"></div>
 </details>
 
 <details id="stage1e-details" class="stage-detail">
-<summary onclick="event.preventDefault(); setStage('1E')">Stage 1E: Farmer revenue sharing</summary>
+<summary>Stage 1E: Farmer revenue sharing</summary>
 <div id="stage1e-control"></div>
 </details>
 </div>
@@ -485,7 +485,7 @@ farmerShareEl.innerHTML=`<div class="label">Stage 1E farmer revenue sharing</div
 const details=document.getElementById(`stage${stage.toLowerCase()}-details`);
 if(details) details.open=activeStage===stage;
 });
-document.getElementById("chart-subtitle").textContent=activeStage==="1E"?"Stage 1E shows project-retained carbon revenue after the farmer share is paid.":activeStage==="1D"?"Financing cost is added on top of delayed payments.":activeStage==="1C"?"Delayed payments can deepen the funding gap and delay recovery.":activeStage==="1B"?"The shaded area shows years when the project is below break-even. The highlighted point is the maximum funding gap.":"Revenue is positive, costs are negative, and the line shows cumulative revenue minus costs.";
+document.getElementById("chart-subtitle").textContent=activeStage==="1E"?"Stage 1E shows project-retained carbon revenue after the farmer share is paid.":activeStage==="1D"?"Stage 1D adds financing cost on top of payment delay. The dashed black line shows how the cost of surviving the wider funding gap can push recovery further out.":activeStage==="1C"?"Stage 1C compares the baseline cumulative cash position against the same project with delayed payments. Revenue is unchanged, but arriving later can deepen the funding gap and delay recovery.":activeStage==="1B"?"The shaded area shows years when the project is below break-even. The highlighted point is the maximum funding gap.":"Revenue is positive, costs are negative, and the line shows cumulative revenue minus costs.";
 const captionEl=document.getElementById("stage1b-caption");
 captionEl.style.display=activeStage==="1B"||activeStage==="1C"||activeStage==="1D"||activeStage==="1E"?"block":"none";
 captionEl.textContent=activeStage==="1E"
