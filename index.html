@@ -568,6 +568,8 @@ document.getElementById("sensitivity-table").innerHTML=header+body;
 
 
 
+
+
 function initializeStageAccordion(){
   const stageDetails = [
     {id:"stage1a-details", stage:"1A"},
@@ -581,18 +583,24 @@ function initializeStageAccordion(){
     const detail = document.getElementById(id);
     if(!detail) return;
 
-    detail.addEventListener("toggle", ()=>{
-      if(!detail.open) return;
+    const summary = detail.querySelector("summary");
+    if(!summary) return;
+
+    summary.addEventListener("click", function(event){
+      event.preventDefault();
+
+      if(detail.open){
+        detail.open = false;
+        return;
+      }
 
       stageDetails.forEach(({id: otherId})=>{
-        if(otherId === id) return;
         const other = document.getElementById(otherId);
         if(other) other.open = false;
       });
 
-      if(activeStage !== stage){
-        setStage(stage);
-      }
+      detail.open = true;
+      setStage(stage);
     });
   });
 }
