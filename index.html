@@ -103,6 +103,27 @@ li{margin-bottom:8px;line-height:1.6;color:var(--muted)}
 
 @media(max-width:1000px){.main{grid-template-columns:1fr;grid-template-areas:"chart" "sideTop" "below" "context"}.assumption-grid{grid-template-columns:repeat(2,1fr)}.stats{grid-template-columns:1fr}.toprow{flex-direction:column}}
 /* Mobile layout */
+
+/* Accordion disclosure markers */
+details > summary{
+  list-style:none;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  cursor:pointer;
+}
+details > summary::-webkit-details-marker{display:none;}
+details > summary::before{
+  content:"▶";
+  display:inline-block;
+  width:1em;
+  font-size:0.9em;
+  line-height:1;
+}
+details[open] > summary::before{
+  content:"▼";
+}
+
 </style>
 </head>
 <body>
@@ -154,7 +175,7 @@ Stage 1C shows that surviving early losses is not free. Financing the funding ga
 <!-- INPUT CONTROLS CARD -->
 <div class="card controls-card">
 <details id="stage1a-details" class="stage-detail" open>
-<summary onclick="event.preventDefault(); setStage('1A')">Stage 1A: Basic economics</summary>
+<summary onclick="setStage(\'1A\')" onclick="event.preventDefault(); setStage('1A')">Stage 1A: Basic economics</summary>
 <div style="display:flex;justify-content:flex-end;margin-top:10px;">
 <button onclick="resetAll()">Reset all</button>
 </div>
@@ -162,22 +183,22 @@ Stage 1C shows that surviving early losses is not free. Financing the funding ga
 </details>
 
 <details id="stage1b-details" class="stage-detail">
-<summary onclick="event.preventDefault(); setStage('1B')">Stage 1B: Funding gap</summary>
+<summary onclick="setStage(\'1B\')" onclick="event.preventDefault(); setStage('1B')">Stage 1B: Funding gap</summary>
 <div class="note" style="margin-top:10px;">No new input. This stage reveals the maximum funding gap in the cumulative cash-position line.</div>
 </details>
 
 <details id="stage1c-details" class="stage-detail">
-<summary onclick="event.preventDefault(); setStage('1C')">Stage 1C: Verification delay</summary>
+<summary onclick="setStage(\'1C\')" onclick="event.preventDefault(); setStage('1C')">Stage 1C: Verification delay</summary>
 <div id="stage1c-control"></div>
 </details>
 
 <details id="stage1d-details" class="stage-detail">
-<summary onclick="event.preventDefault(); setStage('1D')">Stage 1D: Financing cost</summary>
+<summary onclick="setStage(\'1D\')" onclick="event.preventDefault(); setStage('1D')">Stage 1D: Financing cost</summary>
 <div id="stage1d-control"></div>
 </details>
 
 <details id="stage1e-details" class="stage-detail">
-<summary onclick="event.preventDefault(); setStage('1E')">Stage 1E: Farmer revenue sharing</summary>
+<summary onclick="setStage(\'1E\')" onclick="event.preventDefault(); setStage('1E')">Stage 1E: Farmer revenue sharing</summary>
 <div id="stage1e-control"></div>
 </details>
 </div>
@@ -546,16 +567,6 @@ document.getElementById("sensitivity-table").innerHTML=header+body;
 }
 
 buildStatic();update();buildSensitivityTable();
-
-document.querySelectorAll('details').forEach(d=>{
-  const summary=d.querySelector('summary');
-  if(summary){
-    summary.addEventListener('click',e=>{
-      e.preventDefault();
-      d.open=!d.open;
-    });
-  }
-});
 
 </script>
 </body>
