@@ -449,9 +449,6 @@ document.getElementById("stage1d-control").innerHTML=stage1dControls.map(([key,l
 function setInput(key,value){inputs[key]=value;update()}
 function resetOne(key){inputs[key]=defaults[key];document.getElementById(`input-${key}`).value=inputs[key];update()}
 function resetAll(){inputs={...defaults};for(const[key]of [...controls,...stage1cControls,...stage1dControls]){document.getElementById(`input-${key}`).value=inputs[key]}update()}
-function toggleStage1B(){activeStage=activeStage==="1B"?"1A":"1B";update()}
-function toggleStage1C(){activeStage=activeStage==="1C"?"1B":"1C";update()}
-function toggleStage1D(){activeStage=activeStage==="1D"?"1C":"1D";update()}
 function setStage(stage){activeStage=stage;update()}
 /* Core simplified carbon finance model */
 function model(){
@@ -539,7 +536,7 @@ verificationEl.classList.toggle("active",activeStage==="1C"||activeStage==="1D")
 verificationEl.innerHTML=`<div class="label">Stage 1C verification delay</div><div class="status-main">Cash arrives ${inputs.verificationDelay} years after carbon is generated</div><p>Carbon generation is unchanged. Revenue is shifted later, which can widen the funding gap.</p>`;
 ["1A","1B","1C","1D"].forEach(stage=>{
 const details=document.getElementById(`stage${stage.toLowerCase()}-details`);
-if(details) details.open=activeStage===stage;
+if(details && activeStage) details.open=activeStage===stage;
 });
 document.getElementById("chart-subtitle").textContent=activeStage==="1D"?"Financing cost is added on top of delayed payments.":activeStage==="1C"?"Delayed payments can deepen the funding gap and delay recovery.":activeStage==="1B"?"The shaded area shows years when the project is below break-even. The highlighted point is the maximum funding gap.":"Revenue is positive, costs are negative, and the line shows cumulative revenue minus costs.";
 const captionEl=document.getElementById("stage1b-caption");
@@ -625,35 +622,39 @@ document.getElementById("sensitivity-table").innerHTML=header+body;
 
 
 function initializeStageAccordion(){
-  const stageDetails = [
-    {id:"stage1a-details", stage:"1A"},
-    {id:"stage1b-details", stage:"1B"},
-    {id:"stage1c-details", stage:"1C"},
-    {id:"stage1d-details", stage:"1D"}
-  ];
+  const stages = ["1A","1B","1C","1D"];
 
-  stageDetails.forEach(({id, stage})=>{
-    const detail = document.getElementById(id);
+  function getDetail(stage){
+    return document.getElementById(`stage${stage.toLowerCase()}-details`);
+  }
+
+  stages.forEach(stage=>{
+    const detail = getDetail(stage);
     if(!detail) return;
 
     const summary = detail.querySelector("summary");
     if(!summary) return;
 
+    summary.onclick = null;
     summary.addEventListener("click", function(event){
       event.preventDefault();
+      event.stopPropagation();
 
-      if(detail.open){
-        detail.open = false;
-        return;
-      }
+      const isOpen = detail.open;
 
-      stageDetails.forEach(({id: otherId})=>{
-        const other = document.getElementById(otherId);
+      stages.forEach(otherStage=>{
+        const other = getDetail(otherStage);
         if(other) other.open = false;
       });
 
-      detail.open = true;
-      setStage(stage);
+      if(isOpen){
+        activeStage = null;
+      }else{
+        activeStage = stage;
+        detail.open = true;
+      }
+
+      update();
     });
   });
 }
