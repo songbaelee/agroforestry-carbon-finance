@@ -110,6 +110,25 @@ li{margin-bottom:8px;line-height:1.6;color:var(--muted)}
 .module-question{font-size:18px;color:var(--text);margin:8px 0 0}
 .coming-next{margin-top:16px;padding:14px 16px;border:1px dashed var(--line);border-radius:16px;background:#f8fafc;color:var(--muted);line-height:1.55}
 
+.carbon-sales-layout{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 340px;
+  gap:20px;
+  align-items:stretch;
+  margin-top:18px;
+}
+.carbon-chart-wrap{height:360px}
+.sales-control{margin:18px 0}
+.sales-note-card{
+  background:#f8fafc;
+  border:1px solid var(--line);
+  border-radius:18px;
+  padding:16px;
+}
+.sales-note-card p{font-size:14px;margin:8px 0 0}
+@media(max-width:1000px){.carbon-sales-layout{grid-template-columns:1fr}}
+
+
 @media(max-width:1000px){.main{grid-template-columns:1fr;grid-template-areas:"chart" "sideTop" "below" "context"}.assumption-grid{grid-template-columns:repeat(2,1fr)}.stats{grid-template-columns:1fr}.toprow{flex-direction:column}.module-nav{position:static}}
 /* Mobile layout */
 
@@ -278,16 +297,66 @@ Explore scenarios
 
 
 <!-- PLACEHOLDER MODULE SECTIONS -->
+
 <section id="carbon-sales" class="module-section">
 <div class="card sensitivity-card">
 <div class="module-kicker">Module 2</div>
 <h2>Carbon credit generation and sales</h2>
 <p class="module-question">Why does projected carbon not automatically become cash?</p>
-<div class="coming-next">Coming next: a separate graph focused on credits generated, credits verified, credits sold, cash received, and unsold inventory.</div>
+
+<div class="carbon-sales-layout">
+  <div>
+    <div class="carbon-chart-wrap"><canvas id="carbonSalesChart"></canvas></div>
+    <div id="carbon-sales-legend" class="custom-legend"></div>
+    <p class="note" style="margin-top:18px;font-size:15px;line-height:1.55;">
+      This view separates carbon generated from carbon sold. Unsold credits build up as inventory, which means projected carbon is not the same as realized cash.
+    </p>
+  </div>
+
+  <div class="sales-note-card">
+    <div class="label">Carbon sales controls</div>
+
+    <div class="sales-control">
+      <div class="control-head">
+        <div>
+          <div style="font-weight:750;">Annual sales rate</div>
+          <div class="note">Share of available verified credits sold each year.</div>
+        </div>
+        <div class="control-value" id="val-salesRate"></div>
+      </div>
+      <input id="input-salesRate" type="range" min="25" max="100" step="5" value="70" oninput="setSalesInput('salesRate', Number(this.value))" />
+    </div>
+
+    <div class="sales-control">
+      <div class="control-head">
+        <div>
+          <div style="font-weight:750;">Sales delay</div>
+          <div class="note">Simplified delay between credit generation and availability for sale.</div>
+        </div>
+        <div class="control-value" id="val-salesDelay"></div>
+      </div>
+      <input id="input-salesDelay" type="range" min="0" max="5" step="1" value="2" oninput="setSalesInput('salesDelay', Number(this.value))" />
+    </div>
+
+    <div class="sales-control">
+      <div class="control-head">
+        <div>
+          <div style="font-weight:750;">Sales price</div>
+          <div class="note">Simplified average price for sold credits.</div>
+        </div>
+        <div class="control-value" id="val-salesPrice"></div>
+      </div>
+      <input id="input-salesPrice" type="range" min="5" max="60" step="1" value="15" oninput="setSalesInput('salesPrice', Number(this.value))" />
+    </div>
+
+    <p><strong>Core intuition:</strong> credits can be generated before they are sold. That timing gap can create inventory without cash.</p>
+  </div>
+</div>
 </div>
 </section>
 
-<section id="cost-structure" class="module-section">
+<section id="cost-structure"
+ class="module-section">
 <div class="card sensitivity-card">
 <div class="module-kicker">Module 3</div>
 <h2>Cost structure and implementation pacing</h2>
@@ -628,6 +697,119 @@ if(mainChart)mainChart.destroy();
 mainChart=new Chart(document.getElementById("mainChart"),{data,options});
 }
 
+
+/* =========================================================
+   MODULE 2: CARBON CREDIT SALES
+   ========================================================= */
+const salesDefaults={salesRate:70,salesDelay:2,salesPrice:15};
+let salesInputs={...salesDefaults};
+let carbonSalesChart=null;
+
+function setSalesInput(key,value){
+  salesInputs[key]=value;
+  updateCarbonSales();
+}
+
+function carbonSalesModel(){
+  const hectares=scenario.farmers*scenario.hectaresPerFarmer;
+  const treesPlanted=hectares*scenario.treesPerHa;
+  const survivingTrees=treesPlanted*(scenario.survivalRate/100);
+  const years=Array.from({length:21},(_,year)=>year);
+
+  const generatedCredits=years.map(year=>{
+    const growth=growthCurve[Math.min(year,growthCurve.length-1)];
+    return survivingTrees*scenario.carbonPerTreeAtMaturity*growth;
+  });
+
+  let inventory=0;
+  const verifiedCredits=[];
+  const soldCredits=[];
+  const inventoryCredits=[];
+  const cashReceived=[];
+
+  years.forEach(year=>{
+    const verified=year-salesInputs.salesDelay>=0?generatedCredits[year-salesInputs.salesDelay]:0;
+    inventory+=verified;
+
+    const sold=inventory*(salesInputs.salesRate/100);
+    inventory-=sold;
+
+    verifiedCredits.push(verified);
+    soldCredits.push(sold);
+    inventoryCredits.push(inventory);
+    cashReceived.push(sold*salesInputs.salesPrice);
+  });
+
+  return{years,generatedCredits,verifiedCredits,soldCredits,inventoryCredits,cashReceived};
+}
+
+function updateCarbonSales(){
+  const m=carbonSalesModel();
+
+  document.getElementById("val-salesRate").textContent=`${fmtNum(salesInputs.salesRate)}%`;
+  document.getElementById("val-salesDelay").textContent=`${fmtNum(salesInputs.salesDelay)} years`;
+  document.getElementById("val-salesPrice").textContent=`${fmtMoney(salesInputs.salesPrice)}/credit`;
+
+  document.getElementById("carbon-sales-legend").innerHTML=[
+    `<span class="legend-item"><span class="legend-swatch" style="background:#059669"></span>Credits generated</span>`,
+    `<span class="legend-item"><span class="legend-swatch" style="background:#2563eb"></span>Credits sold</span>`,
+    `<span class="legend-item"><span class="legend-line" style="border-color:#0f172a"></span>Unsold credit inventory</span>`
+  ].join("");
+
+  const data={
+    labels:m.years.map(year=>`Year ${year}`),
+    datasets:[
+      {
+        type:"bar",
+        label:"Credits generated",
+        data:m.generatedCredits,
+        backgroundColor:"#059669",
+        borderRadius:{topLeft:8,topRight:8},
+        yAxisID:"credits"
+      },
+      {
+        type:"bar",
+        label:"Credits sold",
+        data:m.soldCredits,
+        backgroundColor:"#2563eb",
+        borderRadius:{topLeft:8,topRight:8},
+        yAxisID:"credits"
+      },
+      {
+        type:"line",
+        label:"Unsold credit inventory",
+        data:m.inventoryCredits,
+        borderColor:"#0f172a",
+        backgroundColor:"#0f172a",
+        borderWidth:4,
+        pointRadius:0,
+        tension:.3,
+        yAxisID:"credits"
+      }
+    ]
+  };
+
+  const options={
+    responsive:true,
+    maintainAspectRatio:false,
+    interaction:{mode:"index",intersect:false},
+    plugins:{legend:{display:false}},
+    scales:{
+      x:{grid:{color:"#e2e8f0"}},
+      credits:{
+        beginAtZero:true,
+        ticks:{callback:(v)=>fmtNum(v)},
+        grid:{color:"#e2e8f0"},
+        title:{display:true,text:"Carbon credits"}
+      }
+    }
+  };
+
+  if(carbonSalesChart) carbonSalesChart.destroy();
+  carbonSalesChart=new Chart(document.getElementById("carbonSalesChart"),{data,options});
+}
+
+
 /* Build sensitivity table for carbon price and project length combinations */
 function calculateSurplusFor(price,years){
 const saved={...inputs};
@@ -685,7 +867,7 @@ function initializeStageAccordion(){
   });
 }
 
-buildStatic();update();buildSensitivityTable();initializeStageAccordion();
+buildStatic();update();buildSensitivityTable();initializeStageAccordion();updateCarbonSales();
 
 </script>
 </body>
