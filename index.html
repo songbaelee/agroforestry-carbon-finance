@@ -110,7 +110,7 @@ li{margin-bottom:8px;line-height:1.6;color:var(--muted)}
 .module-question{font-size:18px;color:var(--text);margin:8px 0 0}
 .coming-next{margin-top:16px;padding:14px 16px;border:1px dashed var(--line);border-radius:16px;background:#f8fafc;color:var(--muted);line-height:1.55}
 
-@media(max-width:1000px){.main{grid-template-columns:1fr;grid-template-areas:"chart" "sideTop" "below" "context"}.assumption-grid{grid-template-columns:repeat(2,1fr)}.stats{grid-template-columns:1fr}.toprow{flex-direction:column}}
+@media(max-width:1000px){.main{grid-template-columns:1fr;grid-template-areas:"chart" "sideTop" "below" "context"}.assumption-grid{grid-template-columns:repeat(2,1fr)}.stats{grid-template-columns:1fr}.toprow{flex-direction:column}.module-nav{position:static}}
 /* Mobile layout */
 
 /* Accordion disclosure markers */
@@ -143,7 +143,7 @@ details[open] > summary::before{
 <p>Carbon finance is complicated. Start by thinking in terms of variables, beginning with two: carbon price and time.</p>
 
 <p style="font-size:13px;color:#94a3b8;margin-top:10px;">
-Stage 1A with Stage 1B, 1C, and 1D reveals • Version 0.5 • May 2026
+Stage 1A with Stage 1B, 1C, and 1D reveals • Version 0.6 • May 2026
 </p>
 
 <div style="margin-top:20px;">
@@ -420,6 +420,46 @@ const defaults={carbonPrice:15,projectYears:10,financingRate:10,verificationDela
 let inputs={...defaults};
 let activeStage="1A";
 let mainChart=null;
+
+const stageConfig={
+  "1A":{
+    detailsId:"stage1a-details",
+    label:"Stage 1A: Basic economics",
+    subtitle:"Revenue is positive, costs are negative, and the line shows cumulative revenue minus costs.",
+    caption:"",
+    showFundingGap:false,
+    showDelay:false,
+    showFinancing:false
+  },
+  "1B":{
+    detailsId:"stage1b-details",
+    label:"Stage 1B: Funding gap",
+    subtitle:"The shaded area shows years when the project is below break-even. The highlighted point is the maximum funding gap.",
+    caption:"Stage 1B shows the largest negative point in the cumulative cash-position line. This is the project’s approximate funding gap.",
+    showFundingGap:true,
+    showDelay:false,
+    showFinancing:false
+  },
+  "1C":{
+    detailsId:"stage1c-details",
+    label:"Stage 1C: Verification delay",
+    subtitle:"Delayed payments can deepen the funding gap and delay recovery.",
+    caption:"Stage 1C compares the baseline cumulative cash position against the same project with delayed payments. Revenue is unchanged, but arriving later can deepen the funding gap and delay recovery.",
+    showFundingGap:true,
+    showDelay:true,
+    showFinancing:false
+  },
+  "1D":{
+    detailsId:"stage1d-details",
+    label:"Stage 1D: Financing cost",
+    subtitle:"Financing cost is added on top of delayed payments.",
+    caption:"Stage 1D adds financing cost on top of payment delay. The dotted black line shows how the cost of surviving the wider funding gap can push recovery further out.",
+    showFundingGap:true,
+    showDelay:true,
+    showFinancing:true
+  }
+};
+const stageIds=Object.keys(stageConfig);
 const growthCurve=[0,0.02,0.05,0.10,0.18,0.28,0.40,0.54,0.68,0.80,0.90,1,1,1,1,1,1,1,1,1,1];
 const controls=[["carbonPrice","Carbon price",5,60,1,"$","/credit",""],["projectYears","Project length",5,20,1,""," years",""]];
 const stage1cControls=[["verificationDelay","Verification/payment delay",0,5,1,""," years","A simplified delay between carbon generation and cash received."]];
@@ -464,11 +504,10 @@ let cumulative=0;
 const rows=Array.from({length:inputs.projectYears+1},(_,year)=>{
 const generatedRevenue=generatedRevenues[year];
 const delayActive=activeStage==="1C"||activeStage==="1D";
-const sharingActive=false;
 const receivedTotalRevenue=delayActive&&year-inputs.verificationDelay>=0?generatedRevenues[year-inputs.verificationDelay]:delayActive?0:generatedRevenue;
-const farmerPayment=sharingActive?receivedTotalRevenue*(inputs.farmerShare/100):0;
+const farmerPayment=0;
 const receivedRevenue=receivedTotalRevenue;
-const revenue=sharingActive?receivedTotalRevenue-farmerPayment:receivedTotalRevenue;
+const revenue=receivedTotalRevenue;
 const plantingCost=year===0?treesPlanted*scenario.plantingCostPerTree:0;
 const maintenanceCost=year>0?survivingTrees*scenario.annualMaintenancePerTree:0;
 const programCost=year>0?scenario.farmers*scenario.annualProgramCostPerFarmer:0;
@@ -510,11 +549,12 @@ return{survivingTrees,treesPerCreditAtMaturity:1/scenario.carbonPerTreeAtMaturit
 /* Refresh all outputs after each input change */
 function update(){
 const m=model();
+const stage=stageConfig[activeStage]||stageConfig["1A"];
 for(const[key,,,,,prefix,suffix]of [...controls,...stage1cControls,...stage1dControls]){document.getElementById(`val-${key}`).textContent=`${prefix}${fmtNum(inputs[key])}${suffix}`}
 document.getElementById("stat-surviving").textContent=fmtNum(m.survivingTrees);
-document.getElementById("stat-revenue-label").textContent=activeStage==="1E"?`${inputs.projectYears}-year project-retained carbon revenue`:`${inputs.projectYears}-year carbon revenue`;
+document.getElementById("stat-revenue-label").textContent=`${inputs.projectYears}-year carbon revenue`;
 document.getElementById("stat-total-revenue").textContent=fmtMoney(m.totals.revenue);
-document.getElementById("stat-total-revenue-note").textContent=activeStage==="1E"?`${inputs.farmerShare}% farmer share; at ${fmtMoney(inputs.carbonPrice)} per credit`:`At ${fmtMoney(inputs.carbonPrice)} per credit`;
+document.getElementById("stat-total-revenue-note").textContent=`At ${fmtMoney(inputs.carbonPrice)} per credit`;
 document.getElementById("stat-surplus-label").textContent=`${inputs.projectYears}-year cumulative cash position`;
 document.getElementById("stat-total-surplus").textContent=fmtMoney(m.totals.surplus);
 document.getElementById("context-credit").textContent=`About ${fmtNum(m.treesPerCreditAtMaturity)} mature trees create roughly one carbon credit per year in this simplified example.`;
@@ -526,38 +566,34 @@ const dot=activeStatus==="Positive"?"🟢":activeStatus==="Near break-even"?"�
 statusEl.className=`status ${cls}`;
 statusEl.innerHTML=`<div class="label">Project status</div><div class="status-main">${dot} ${activeStatus}</div><p>${inputs.projectYears}-year cumulative cash position: <strong>${fmtMoney(activeSurplus)}</strong></p>`;
 const fundingEl=document.getElementById("funding-gap-card");
-fundingEl.classList.toggle("active",activeStage==="1B"||activeStage==="1C"||activeStage==="1D");
+fundingEl.classList.toggle("active",stage.showFundingGap);
 fundingEl.innerHTML=`<div class="label">Stage 1B funding gap</div><div class="status-main">${fmtMoney(m.minRow.cumulative)} in Year ${m.minRow.year}</div><p>This approximates the maximum funding the project may need during the project. It approximates the funding the project may need to survive the early years.</p>${m.recoveryYear?`<p>Returns to break-even in Year ${m.recoveryYear}.</p>`:`<p>Does not return to break-even within ${inputs.projectYears} years.</p>`}`;
 const financingEl=document.getElementById("financing-cost-card");
-financingEl.classList.toggle("active",activeStage==="1D");
+financingEl.classList.toggle("active",stage.showFinancing);
 financingEl.innerHTML=`<div class="label">Stage 1D financing cost</div><div class="status-main">${m.financingDelay===null?"Financed break-even is not reached":"Financing cost delays break-even by "+m.financingDelay+" years"}</div><p>Without financing cost: Year ${m.recoveryYear ?? "Not reached"}.</p><p>With financing cost: Year ${m.financedRecoveryYear ?? "Not reached"}.</p>`;
 const verificationEl=document.getElementById("verification-delay-card");
-verificationEl.classList.toggle("active",activeStage==="1C"||activeStage==="1D");
+verificationEl.classList.toggle("active",stage.showDelay);
 verificationEl.innerHTML=`<div class="label">Stage 1C verification delay</div><div class="status-main">Cash arrives ${inputs.verificationDelay} years after carbon is generated</div><p>Carbon generation is unchanged. Revenue is shifted later, which can widen the funding gap.</p>`;
-["1A","1B","1C","1D"].forEach(stage=>{
-const details=document.getElementById(`stage${stage.toLowerCase()}-details`);
-if(details && activeStage) details.open=activeStage===stage;
+stageIds.forEach(stageId=>{
+const details=document.getElementById(stageConfig[stageId].detailsId);
+if(details && activeStage) details.open=activeStage===stageId;
 });
-document.getElementById("chart-subtitle").textContent=activeStage==="1D"?"Financing cost is added on top of delayed payments.":activeStage==="1C"?"Delayed payments can deepen the funding gap and delay recovery.":activeStage==="1B"?"The shaded area shows years when the project is below break-even. The highlighted point is the maximum funding gap.":"Revenue is positive, costs are negative, and the line shows cumulative revenue minus costs.";
+document.getElementById("chart-subtitle").textContent=stage.subtitle;
 const captionEl=document.getElementById("stage1b-caption");
-captionEl.style.display=activeStage==="1B"||activeStage==="1C"||activeStage==="1D"?"block":"none";
-captionEl.textContent=activeStage==="1D"
-?"Stage 1D adds financing cost on top of payment delay. The dashed black line shows how the cost of surviving the wider funding gap can push recovery further out."
-:activeStage==="1C"
-?"Stage 1C compares the baseline cumulative cash position against the same project with delayed payments. Revenue is unchanged, but arriving later can deepen the funding gap and delay recovery."
-:"Stage 1B does not add a new input. It reveals how to read the same cumulative line as a funding gap.";
+captionEl.style.display=stage.caption?"block":"none";
+captionEl.textContent=stage.caption;
 const legendItems=[
 `<span class="legend-item"><span class="legend-swatch" style="background:#059669"></span>Annual carbon revenue received</span>`,
 `<span class="legend-item cost-legend-item" title="${activeStage==="1D"?"Includes planting, maintenance, program operations, and financing-related costs.":"Includes planting, maintenance, and program operations."}"><span class="legend-swatch" style="background:#ea580c"></span>Annual project costs ⓘ</span>`,
 `<span class="legend-item"><span class="legend-line" style="border-color:#2563eb"></span>Cumulative cash position</span>`
 ];
-if(activeStage==="1C"||activeStage==="1D"){
+if(stage.showDelay){
 legendItems.push(`<span class="legend-item"><span class="legend-line dashed" style="border-color:#0f766e"></span>With payment delay</span>`);
 }
-if(activeStage==="1D"){
+if(stage.showFinancing){
 legendItems.push(`<span class="legend-item"><span class="legend-line dashed" style="border-color:#0f172a"></span>With financing cost</span>`);
 }
-if(activeStage==="1B"||activeStage==="1C"||activeStage==="1D"){
+if(stage.showFundingGap){
 legendItems.push(`<span class="legend-item"><span class="legend-dot"></span>Maximum funding gap</span>`);
 }
 document.getElementById("custom-legend").innerHTML=legendItems.join("");
@@ -566,9 +602,9 @@ function padToTwenty(values){return chartYears.map((_,i)=>i<values.length?values
 const cumulativeData=m.rows.map(r=>r.cumulative);
 const minPointData=m.rows.map(r=>r.year===m.minRow.year?m.minRow.cumulative:null);
 const datasets=[{type:"bar",label:(activeStage==="1C"||activeStage==="1D")?"Annual carbon revenue received":"Annual carbon revenue",data:padToTwenty(m.rows.map(r=>r.revenue)),backgroundColor:"#059669",borderRadius:{topLeft:8,topRight:8}},{type:"bar",label:"Annual project costs",data:padToTwenty(m.rows.map(r=>r.costOutflow)),backgroundColor:"#ea580c",borderRadius:{bottomLeft:8,bottomRight:8}}];
-if(activeStage==="1B"||activeStage==="1C"||activeStage==="1D"){datasets.push({type:"line",label:"Below break-even area",data:padToTwenty(cumulativeData.map(v=>v<0?v:0)),fill:{target:{value:0}},borderColor:"rgba(234,88,12,0)",backgroundColor:"rgba(234,88,12,0.08)",pointRadius:0,tension:.3,spanGaps:true,order:10});}
-datasets.push({type:"line",label:"Cumulative cash position",data:padToTwenty((activeStage==="1C"||activeStage==="1D")?m.baselineRows.map(r=>r.cumulative):cumulativeData),borderColor:"#2563eb",backgroundColor:"#2563eb",borderWidth:4,pointRadius:0,tension:.3,pointStyle:"line",order:0});
-if(activeStage==="1C"||activeStage==="1D"){
+if(stage.showFundingGap){datasets.push({type:"line",label:"Below break-even area",data:padToTwenty(cumulativeData.map(v=>v<0?v:0)),fill:{target:{value:0}},borderColor:"rgba(234,88,12,0)",backgroundColor:"rgba(234,88,12,0.08)",pointRadius:0,tension:.3,spanGaps:true,order:10});}
+datasets.push({type:"line",label:"Cumulative cash position",data:padToTwenty(stage.showDelay?m.baselineRows.map(r=>r.cumulative):cumulativeData),borderColor:"#2563eb",backgroundColor:"#2563eb",borderWidth:4,pointRadius:0,tension:.3,pointStyle:"line",order:0});
+if(stage.showDelay){
 datasets.push({
 type:"line",
 label:"With payment delay",
@@ -584,8 +620,8 @@ order:1
 });
 }
 
-if(activeStage==="1D"){datasets.push({type:"line",label:"With financing cost",data:padToTwenty(m.financingRows.map(r=>r.cumulativeAfterFinancing)),borderColor:"#0f172a",backgroundColor:"#0f172a",borderWidth:3,borderDash:[2,6],pointRadius:4,pointHoverRadius:6,pointStyle:"rectRot",order:2});}
-if(activeStage==="1B"||activeStage==="1C"||activeStage==="1D"){datasets.push({type:"line",label:"Maximum funding gap",data:padToTwenty(minPointData),borderColor:"#0f172a",backgroundColor:"#0f172a",borderWidth:0,pointRadius:7,pointHoverRadius:9,showLine:false,spanGaps:false,order:-1});}
+if(stage.showFinancing){datasets.push({type:"line",label:"With financing cost",data:padToTwenty(m.financingRows.map(r=>r.cumulativeAfterFinancing)),borderColor:"#0f172a",backgroundColor:"#0f172a",borderWidth:3,borderDash:[2,6],pointRadius:4,pointHoverRadius:6,pointStyle:"rectRot",order:2});}
+if(stage.showFundingGap){datasets.push({type:"line",label:"Maximum funding gap",data:padToTwenty(minPointData),borderColor:"#0f172a",backgroundColor:"#0f172a",borderWidth:0,pointRadius:7,pointHoverRadius:9,showLine:false,spanGaps:false,order:-1});}
 const data={labels:chartYears.map(year=>`Year ${year}`),datasets};
 const options={responsive:true,maintainAspectRatio:false,interaction:{mode:"index",intersect:false},plugins:{legend:{display:false}},layout:{padding:{top:0,bottom:0}},scales:{x:{grid:{color:"#e2e8f0"}},y:{min:-500000,max:500000,ticks:{callback:(v)=>fmtMoney(v)},grid:{color:"#e2e8f0"}}}};
 if(mainChart)mainChart.destroy();
@@ -622,14 +658,8 @@ document.getElementById("sensitivity-table").innerHTML=header+body;
 
 
 function initializeStageAccordion(){
-  const stages = ["1A","1B","1C","1D"];
-
-  function getDetail(stage){
-    return document.getElementById(`stage${stage.toLowerCase()}-details`);
-  }
-
-  stages.forEach(stage=>{
-    const detail = getDetail(stage);
+  stageIds.forEach(stageId=>{
+    const detail = document.getElementById(stageConfig[stageId].detailsId);
     if(!detail) return;
 
     const summary = detail.querySelector("summary");
@@ -642,17 +672,13 @@ function initializeStageAccordion(){
 
       const isOpen = detail.open;
 
-      stages.forEach(otherStage=>{
-        const other = getDetail(otherStage);
+      stageIds.forEach(otherStageId=>{
+        const other = document.getElementById(stageConfig[otherStageId].detailsId);
         if(other) other.open = false;
       });
 
-      if(isOpen){
-        activeStage = null;
-      }else{
-        activeStage = stage;
-        detail.open = true;
-      }
+      activeStage = isOpen ? null : stageId;
+      if(activeStage) detail.open = true;
 
       update();
     });
