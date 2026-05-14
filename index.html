@@ -309,7 +309,7 @@ Explore scenarios
     <div class="carbon-chart-wrap"><canvas id="carbonSalesChart"></canvas></div>
     <div id="carbon-sales-legend" class="custom-legend"></div>
     <p class="note" style="margin-top:18px;font-size:15px;line-height:1.55;">
-      This view separates carbon generated from carbon sold. Unsold credits build up as inventory, which means projected carbon is not the same as realized cash.
+      This view separates carbon generated from carbon sold. Unsold credits build up as inventory, which means projected carbon generation is not the same as realized sales.
     </p>
   </div>
 
@@ -338,18 +338,7 @@ Explore scenarios
       <input id="input-salesDelay" type="range" min="0" max="5" step="1" value="2" oninput="setSalesInput('salesDelay', Number(this.value))" />
     </div>
 
-    <div class="sales-control">
-      <div class="control-head">
-        <div>
-          <div style="font-weight:750;">Sales price</div>
-          <div class="note">Simplified average price for sold credits.</div>
-        </div>
-        <div class="control-value" id="val-salesPrice"></div>
-      </div>
-      <input id="input-salesPrice" type="range" min="5" max="60" step="1" value="15" oninput="setSalesInput('salesPrice', Number(this.value))" />
-    </div>
-
-    <p><strong>Core intuition:</strong> credits can be generated before they are sold. That timing gap can create inventory without cash.</p>
+    <p><strong>Core intuition:</strong> credits can be generated before they are sold. That timing gap can create inventory buildup even when the project appears successful on paper.</p>
   </div>
 </div>
 </div>
@@ -701,7 +690,7 @@ mainChart=new Chart(document.getElementById("mainChart"),{data,options});
 /* =========================================================
    MODULE 2: CARBON CREDIT SALES
    ========================================================= */
-const salesDefaults={salesRate:70,salesDelay:2,salesPrice:15};
+const salesDefaults={salesRate:70,salesDelay:2};
 let salesInputs={...salesDefaults};
 let carbonSalesChart=null;
 
@@ -725,7 +714,6 @@ function carbonSalesModel(){
   const verifiedCredits=[];
   const soldCredits=[];
   const inventoryCredits=[];
-  const cashReceived=[];
 
   years.forEach(year=>{
     const verified=year-salesInputs.salesDelay>=0?generatedCredits[year-salesInputs.salesDelay]:0;
@@ -737,10 +725,9 @@ function carbonSalesModel(){
     verifiedCredits.push(verified);
     soldCredits.push(sold);
     inventoryCredits.push(inventory);
-    cashReceived.push(sold*salesInputs.salesPrice);
   });
 
-  return{years,generatedCredits,verifiedCredits,soldCredits,inventoryCredits,cashReceived};
+  return{years,generatedCredits,verifiedCredits,soldCredits,inventoryCredits};
 }
 
 function updateCarbonSales(){
@@ -748,7 +735,6 @@ function updateCarbonSales(){
 
   document.getElementById("val-salesRate").textContent=`${fmtNum(salesInputs.salesRate)}%`;
   document.getElementById("val-salesDelay").textContent=`${fmtNum(salesInputs.salesDelay)} years`;
-  document.getElementById("val-salesPrice").textContent=`${fmtMoney(salesInputs.salesPrice)}/credit`;
 
   document.getElementById("carbon-sales-legend").innerHTML=[
     `<span class="legend-item"><span class="legend-swatch" style="background:#059669"></span>Credits generated</span>`,
@@ -798,6 +784,7 @@ function updateCarbonSales(){
       x:{grid:{color:"#e2e8f0"}},
       credits:{
         beginAtZero:true,
+        max:12000,
         ticks:{callback:(v)=>fmtNum(v)},
         grid:{color:"#e2e8f0"},
         title:{display:true,text:"Carbon credits"}
