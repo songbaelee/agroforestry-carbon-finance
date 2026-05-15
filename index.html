@@ -126,7 +126,42 @@ li{margin-bottom:8px;line-height:1.6;color:var(--muted)}
   padding:16px;
 }
 .sales-note-card p{font-size:14px;margin:8px 0 0}
-@media(max-width:1000px){.carbon-sales-layout{grid-template-columns:1fr}}
+.reference-projects{
+  margin-top:22px;
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:14px;
+}
+.reference-card{
+  background:#f8fafc;
+  border:1px solid var(--line);
+  border-radius:18px;
+  padding:16px;
+}
+.reference-card h3{
+  margin:6px 0 8px;
+  font-size:17px;
+}
+.reference-meta{
+  font-size:12px;
+  font-weight:800;
+  text-transform:uppercase;
+  letter-spacing:.05em;
+  color:var(--muted);
+}
+.reference-card p{
+  font-size:14px;
+  line-height:1.55;
+  margin:8px 0 0;
+}
+.reference-card a{
+  display:inline-block;
+  margin-top:10px;
+  font-weight:800;
+  color:#2563eb;
+  text-decoration:none;
+}
+@media(max-width:1000px){.carbon-sales-layout{grid-template-columns:1fr}.reference-projects{grid-template-columns:1fr}}
 
 
 @media(max-width:1000px){.main{grid-template-columns:1fr;grid-template-areas:"chart" "sideTop" "below" "context"}.assumption-grid{grid-template-columns:repeat(2,1fr)}.stats{grid-template-columns:1fr}.toprow{flex-direction:column}.module-nav{position:static}}
@@ -301,7 +336,7 @@ Explore scenarios
 <section id="carbon-sales" class="module-section">
 <div class="card sensitivity-card">
 <div class="module-kicker">Module 2A</div>
-<h2>Carbon generation forecasts</h2>
+<h2>Biological carbon accumulation</h2>
 <p class="module-question">Why do biological assumptions change the carbon curve so much?</p>
 
 <div class="carbon-sales-layout">
@@ -309,19 +344,52 @@ Explore scenarios
     <div class="carbon-chart-wrap"><canvas id="carbonGenerationChart"></canvas></div>
     <div id="carbon-generation-legend" class="custom-legend"></div>
     <p class="note" style="margin-top:18px;font-size:15px;line-height:1.55;">
-      This view compares cumulative carbon generation across simple project archetypes. It does not try to predict a real project. It shows the core intuition: trees grow slowly, and timing matters.
+      This view compares relative carbon stock accumulation across simple project archetypes. It does not estimate issued credits. The point is biological timing: trees survive, grow, and accumulate biomass slowly.
     </p>
   </div>
 
   <div class="sales-note-card">
     <div class="label">Module 2A lesson</div>
-    <h3 style="margin:8px 0 8px;font-size:18px;">Carbon forecasts are biological forecasts first.</h3>
-    <p>Before a project can sell carbon credits, it needs trees to survive, grow, and accumulate carbon over time.</p>
-    <p>The same project size can produce very different carbon curves depending on rainfall, growth speed, survival, and system type.</p>
-    <p><strong>Design choice:</strong> no sliders yet. The first job is to compare curve shapes, not optimize assumptions.</p>
+    <h3 style="margin:8px 0 8px;font-size:18px;">Carbon forecasts start as biological forecasts.</h3>
+    <p>Before a project can sell carbon credits, trees need to survive, grow, and accumulate biomass over time.</p>
+    <p>The same project size can produce very different growth curves depending on rainfall, survival, spacing, and system type.</p>
+    <p><strong>Design choice:</strong> no sliders yet. First compare curve shapes. Later modules can convert biological growth into estimated credits, verification, issuance, and sales.</p>
 
     <div class="coming-next" style="margin-top:18px;">
-      Next in Module 2B: separate carbon generated from carbon verified, issued, contracted, and sold.
+      Next in Module 2B: separate biological accumulation from carbon accounting and credit issuance.
+    </div>
+  </div>
+</div>
+
+<div style="margin-top:24px;">
+  <h3 style="margin:0 0 6px;font-size:18px;">Real-world reference projects</h3>
+  <p class="note" style="margin:0 0 14px;font-size:15px;line-height:1.55;">
+    These projects anchor the archetypes. They are not used as model inputs.
+  </p>
+
+  <div class="reference-projects">
+    <div class="reference-card">
+      <div class="reference-meta">Colombia • Shade-grown perennial system</div>
+      <h3>Asómbrate Programme</h3>
+      <p><strong>Players:</strong> Solidaridad, Rabobank ACORN, smallholder coffee and cocoa producers.</p>
+      <p><strong>Why it helps:</strong> shows distributed smallholder agroforestry where carbon income is layered onto perennial farming systems.</p>
+      <a href="https://www.solidaridadnetwork.org/story/asombrate-promoting-climate-smart-agriculture-harvesting-carbon-credits/" target="_blank" rel="noopener noreferrer">Learn more</a>
+    </div>
+
+    <div class="reference-card">
+      <div class="reference-meta">Ethiopia • Semi-arid regeneration system</div>
+      <h3>Humbo Assisted Natural Regeneration</h3>
+      <p><strong>Players:</strong> World Vision, Ethiopian partners, World Bank BioCarbon Fund, local communities.</p>
+      <p><strong>Why it helps:</strong> shows dryland regeneration and farmer-managed natural regeneration rather than conventional tree planting.</p>
+      <a href="https://www.worldbank.org/en/news/feature/2012/10/09/ethiopia-climate-project-receives-africa-s-first-forestry-carbon-credits" target="_blank" rel="noopener noreferrer">Learn more</a>
+    </div>
+
+    <div class="reference-card">
+      <div class="reference-meta">Colombia • Humid tropical agroforestry</div>
+      <h3>Colombia Sustainable Agroforestry Cacao</h3>
+      <p><strong>Players:</strong> Terra Global Capital, local cacao producers and project partners.</p>
+      <p><strong>Why it helps:</strong> shows cacao agroforestry on degraded pastureland with higher long-term biomass potential.</p>
+      <a href="https://www.terraglobalcapital.com/colombia-sustainable-agroforestry-cacao/" target="_blank" rel="noopener noreferrer">Learn more</a>
     </div>
   </div>
 </div>
@@ -672,40 +740,38 @@ mainChart=new Chart(document.getElementById("mainChart"),{data,options});
 
 
 /* =========================================================
-   MODULE 2A: CARBON GENERATION FORECASTS
+   MODULE 2A: BIOLOGICAL CARBON ACCUMULATION
    ========================================================= */
 let carbonGenerationChart=null;
 
 const carbonArchetypes=[
   {
     label:"Humid tropical agroforestry",
-    note:"Faster early growth and higher long-run carbon generation.",
+    note:"Faster early growth and higher long-run carbon stock accumulation.",
     color:"#059669",
-    annualCreditsAtMaturity:1900,
-    curve:[0,0.03,0.08,0.16,0.28,0.42,0.58,0.72,0.84,0.92,0.97,1,1,1,1,1,1,1,1,1,1]
+    maxIndex:100,
+    curve:[0,3,8,16,28,42,58,72,84,92,97,100,100,100,100,100,100,100,100,100,100]
   },
   {
     label:"Shade-grown perennial systems",
     note:"Moderate growth, often steadier but still slow in early years.",
     color:"#2563eb",
-    annualCreditsAtMaturity:1500,
-    curve:[0,0.02,0.05,0.10,0.18,0.28,0.40,0.54,0.68,0.80,0.90,0.96,1,1,1,1,1,1,1,1,1]
+    maxIndex:82,
+    curve:[0,2,5,10,18,28,40,54,68,80,90,96,100,100,100,100,100,100,100,100,100]
   },
   {
-    label:"Semi-arid agroforestry",
-    note:"Slower growth and lower long-run carbon generation.",
+    label:"Semi-arid regeneration systems",
+    note:"Slower growth and greater rainfall sensitivity.",
     color:"#ea580c",
-    annualCreditsAtMaturity:1050,
-    curve:[0,0.01,0.025,0.05,0.09,0.14,0.21,0.30,0.40,0.50,0.60,0.70,0.78,0.85,0.91,0.96,1,1,1,1,1]
+    maxIndex:62,
+    curve:[0,1,2.5,5,9,14,21,30,40,50,60,70,78,85,91,96,100,100,100,100,100]
   }
 ];
 
-function cumulativeCreditsForArchetype(archetype){
-  let cumulative=0;
+function carbonStockIndexForArchetype(archetype){
   return Array.from({length:21},(_,year)=>{
-    const annualCredits=archetype.annualCreditsAtMaturity*archetype.curve[Math.min(year,archetype.curve.length-1)];
-    cumulative+=annualCredits;
-    return cumulative;
+    const relativeGrowth=archetype.curve[Math.min(year,archetype.curve.length-1)]/100;
+    return archetype.maxIndex*relativeGrowth;
   });
 }
 
@@ -721,7 +787,7 @@ function updateCarbonGeneration(){
     datasets:carbonArchetypes.map(a=>({
       type:"line",
       label:a.label,
-      data:cumulativeCreditsForArchetype(a),
+      data:carbonStockIndexForArchetype(a),
       borderColor:a.color,
       backgroundColor:a.color,
       borderWidth:4,
@@ -739,7 +805,7 @@ function updateCarbonGeneration(){
       tooltip:{
         callbacks:{
           label:function(context){
-            return `${context.dataset.label}: ${fmtNum(context.raw)} cumulative credits`;
+            return `${context.dataset.label}: ${fmtNum(context.raw,1)} relative carbon stock index`;
           }
         }
       }
@@ -748,10 +814,10 @@ function updateCarbonGeneration(){
       x:{grid:{color:"#e2e8f0"}},
       y:{
         beginAtZero:true,
-        max:30000,
+        max:100,
         ticks:{callback:(v)=>fmtNum(v)},
         grid:{color:"#e2e8f0"},
-        title:{display:true,text:"Cumulative carbon credits generated"}
+        title:{display:true,text:"Relative carbon stock / biomass accumulation"}
       }
     }
   };
