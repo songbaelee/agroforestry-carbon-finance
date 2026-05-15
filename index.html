@@ -222,7 +222,9 @@ Stage 1C shows that surviving early losses is not free. Financing the funding ga
 
 <details id="stage1b-details" class="stage-detail">
 <summary>Stage 1B: Funding gap</summary>
-
+<p class="note" style="margin:10px 0 0;font-size:14px;line-height:1.5;">
+The same cumulative line can also be read as a funding requirement. The lowest point approximates how much external funding the project may need before recovery.
+</p>
 </details>
 
 <details id="stage1c-details" class="stage-detail">
@@ -327,17 +329,7 @@ Explore scenarios
 
 
 
-</div>
-</section>
 
-
-<section id="cost-structure"
- class="module-section">
-<div class="card sensitivity-card">
-<div class="module-kicker">Module 3</div>
-<h2>Cost structure and implementation pacing</h2>
-<p class="module-question">Why are agroforestry projects so capital intensive early on?</p>
-<div class="coming-next">Coming next: a focused view of planting, maintenance, farmer engagement, staffing, MRV, and phased implementation costs.</div>
 
 <div style="margin-top:28px;">
   <h3 style="margin-bottom:14px;">Example real-world systems</h3>
@@ -371,6 +363,19 @@ Explore scenarios
   </div>
 </div>
 
+</div>
+
+</div>
+</section>
+
+
+<section id="cost-structure"
+ class="module-section">
+<div class="card sensitivity-card">
+<div class="module-kicker">Module 3</div>
+<h2>Cost structure and implementation pacing</h2>
+<p class="module-question">Why are agroforestry projects so capital intensive early on?</p>
+<div class="coming-next">Coming next: a focused view of planting, maintenance, farmer engagement, staffing, MRV, and phased implementation costs.</div>
 </div>
 </section>
 
@@ -782,7 +787,7 @@ function updateCarbonGeneration(){
       y:{
         beginAtZero:true,
         max:105,
-        ticks:{callback:(v)=>fmtNum(v)},
+        ticks:{stepSize:20,callback:(v)=>v>100?"":fmtNum(v)},
         grid:{color:"#e2e8f0"},
         title:{display:true,text:"Relative biomass accumulation index"}
       }
