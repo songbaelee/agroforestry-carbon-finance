@@ -311,7 +311,7 @@ Explore scenarios
     <div class="carbon-chart-wrap"><canvas id="carbonGenerationChart"></canvas></div>
     <div id="carbon-generation-legend" class="custom-legend"></div>
     <p class="note" style="margin-top:18px;font-size:15px;line-height:1.55;">
-      This view compares simplified biological growth patterns across agroforestry archetypes. The curves are normalized for educational purposes rather than tied to exact hectares, tons, or issued credits. The core intuition is simple: trees grow slowly, and timing matters.
+      This view compares simplified biological growth patterns across agroforestry archetypes. The curves are normalized for educational purposes rather than tied to exact hectares, tons, or verified credits. The core intuition is simple: trees grow slowly, and timing matters.
     </p>
     <p class="note" style="margin-top:8px;font-size:15px;line-height:1.55;">
       Solid lines show the 100% baseline. Dotted lines show the water-adjusted scenario.
@@ -343,7 +343,7 @@ Explore scenarios
     </div>
 
     <div class="coming-next" style="margin-top:18px;">
-      Module 2B below separates carbon generated from carbon verified, issued, and sold.
+      Module 2B below separates carbon generated from carbon verified, verified, and sold.
     </div>
   </div>
 
@@ -389,7 +389,7 @@ Explore scenarios
 
 <div class="module2b-section" style="margin-top:32px;padding-top:28px;border-top:1px solid var(--line);">
   <div class="module-kicker">Module 2B</div>
-  <h2>Carbon generated vs. verified, issued, and sold</h2>
+  <h2>Carbon generated vs. verified, verified, and sold</h2>
   <p class="note" style="margin-top:8px;">This view uses one representative archetype to isolate the timing lesson: carbon can exist biologically before it becomes financially usable.</p>
   <p class="module-question">When does biological carbon become usable project revenue?</p>
 
@@ -405,7 +405,7 @@ Explore scenarios
     <div class="sales-note-card">
       <div class="label">Module 2B lesson</div>
       <h3 style="margin:8px 0 8px;font-size:18px;">Carbon can exist before cash exists.</h3>
-      <p>Trees may already be storing carbon, but the project usually cannot use that value financially until carbon is verified, credits are issued, and credits are sold or paid for.</p>
+      <p>Trees may already be storing carbon, but the project usually cannot use that value financially until carbon is verified, credits are verified, and credits are sold or paid for.</p>
       <p><strong>Design choice:</strong> Module 2B uses the shade-grown perennial archetype from Module 2A so the timing layers stay readable.</p>
 
       <div id="module2b-controls">
@@ -427,7 +427,7 @@ Explore scenarios
           <div class="control-head">
             <div>
               <div style="font-weight:750;">Sale / payment delay</div>
-              <div class="note">Additional years before issued credits are sold or cash is received.</div>
+              <div class="note">Additional years before verified credits are sold or cash is received.</div>
             </div>
             <div class="control-right">
               <div class="control-value" id="val-module2b-payment-delay"></div>
@@ -815,7 +815,7 @@ const carbonArchetypes=[
     color:"#2563eb",
     waterSlopeSensitivity:0.35,
     waterCeilingSensitivity:0.10,
-    maxIndex:82,
+    maxIndex:80,
     curve:[0,0.02,0.05,0.10,0.18,0.28,0.40,0.54,0.68,0.80,0.90,0.96,1,1,1,1,1,1,1,1,1]
   },
   {
@@ -824,7 +824,7 @@ const carbonArchetypes=[
     color:"#ea580c",
     waterSlopeSensitivity:1.15,
     waterCeilingSensitivity:0.80,
-    maxIndex:62,
+    maxIndex:60,
     curve:[0,0.01,0.025,0.05,0.09,0.14,0.21,0.30,0.40,0.50,0.60,0.70,0.78,0.85,0.91,0.96,1,1,1,1,1]
   }
 ];
@@ -910,7 +910,10 @@ function updateCarbonGeneration(){
           label:a.label + " water-adjusted",
           data:rainfallAdjusted,
           borderColor:a.color + "AA",
-          backgroundColor:a.color,
+          backgroundColor:a.color + "12",
+          fill:{
+            target:"-1"
+          },
           borderWidth:3,
           borderDash:[10,5],
           pointRadius:0,
@@ -995,13 +998,13 @@ function updateCarbonTiming(){
   const representative=carbonArchetypes.find(a=>a.label==="Shade-grown perennial systems") || carbonArchetypes[1];
   const generated=relativeBiomassForArchetype(representative,false);
   const verified=shiftTimingSeries(generated,module2BInputs.verificationDelay);
-  const issued=shiftTimingSeries(generated,module2BInputs.verificationDelay+module2BIssuanceDelay);
+  const verified=shiftTimingSeries(generated,module2BInputs.verificationDelay+module2BIssuanceDelay);
   const sold=shiftTimingSeries(generated,module2BInputs.verificationDelay+module2BIssuanceDelay+module2BInputs.paymentDelay);
 
   document.getElementById("carbon-timing-legend").innerHTML=`
     <span class="legend-item"><span class="legend-line" style="border-color:#059669"></span>Carbon generated</span>
     <span class="legend-item"><span class="legend-line dashed" style="border-color:#2563eb"></span>Verified carbon</span>
-    <span class="legend-item"><span class="legend-line dashed" style="border-color:#ea580c"></span>Credits issued</span>
+    <span class="legend-item"><span class="legend-line dashed" style="border-color:#ea580c"></span>Credits verified</span>
     <span class="legend-item"><span class="legend-line dashed" style="border-color:#0f172a"></span>Sold / cash received</span>
   `;
 
@@ -1033,8 +1036,8 @@ function updateCarbonTiming(){
       },
       {
         type:"line",
-        label:"Credits issued",
-        data:issued,
+        label:"Credits verified",
+        data:verified,
         borderColor:"#ea580c",
         backgroundColor:"#ea580c",
         borderWidth:3,
