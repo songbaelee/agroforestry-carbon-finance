@@ -823,9 +823,10 @@ function updateCarbonGeneration(){
 
   document.getElementById("carbon-generation-legend").innerHTML=
   carbonArchetypes.map(a=>
-    `<span class="legend-item"><span class="legend-line" style="border-color:${a.color}"></span>${a.label} baseline</span>
-     <span class="legend-item"><span class="legend-line dashed" style="border-color:${a.color}"></span>${a.label} water-adjusted</span>`
-  ).join("");
+    `<span class="legend-item"><span class="legend-line" style="border-color:${a.color}"></span>${a.label}</span>`
+  ).join("") +
+  `<span class="legend-item"><span class="legend-line" style="border-color:#475569"></span>Solid = 100% baseline</span>
+   <span class="legend-item"><span class="legend-line dashed" style="border-color:#475569"></span>Dotted = water-adjusted scenario</span>`;
 
   const data={
     labels:years.map(year=>`Year ${year}`),
