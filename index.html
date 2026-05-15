@@ -334,7 +334,7 @@ Explore scenarios
             <button class="mini-reset" onclick="resetModule2A()">Reset</button>
           </div>
         </div>
-        <input id="input-module2a-rainfall" type="range" min="60" max="140" step="5" value="100" oninput="setModule2AInput('rainfall', Number(this.value))" />
+        <input id="input-module2a-rainfall" type="range" min="60" max="140" step="5" value="80" oninput="setModule2AInput('rainfall', Number(this.value))" />
       </div>
     </div>
 
@@ -734,7 +734,7 @@ mainChart=new Chart(document.getElementById("mainChart"),{data,options});
    MODULE 2A: CARBON GENERATION FORECASTS
    ========================================================= */
 let carbonGenerationChart=null;
-const module2ADefaults={rainfall:100};
+const module2ADefaults={rainfall:80};
 let module2AInputs={...module2ADefaults};
 
 const carbonArchetypes=[
@@ -814,29 +814,9 @@ function updateCarbonGeneration(){
   const data={
     labels:years.map(year=>`Year ${year}`),
     datasets:carbonArchetypes.flatMap(a=>{
-      const baseline=relativeBiomassForArchetype(a);
+      const baseline=relativeBiomassForArchetype(a, false);
 
-      const rainfallAdjusted=baseline.map((v,year)=>{
-        const rainfall=document.getElementById("rainfall-input")
-          ? Number(document.getElementById("rainfall-input").value)
-          : 100;
-
-        const rainfallFactor=(rainfall-100)/100;
-
-        let sensitivity=0.25;
-        if(a.label.includes("Shade")) sensitivity=0.45;
-        if(a.label.includes("Semi-arid")) sensitivity=0.8;
-
-        const yearWeight=Math.min(year/10,1);
-
-        return Math.max(
-          0,
-          Math.min(
-            105,
-            v * (1 + rainfallFactor * sensitivity * yearWeight)
-          )
-        );
-      });
+      const rainfallAdjusted=relativeBiomassForArchetype(a, true);
 
       return [
         {
@@ -845,9 +825,10 @@ function updateCarbonGeneration(){
           data:baseline,
           borderColor:a.color,
           backgroundColor:a.color,
-          borderWidth:4,
+          borderWidth:3,
           pointRadius:0,
-          tension:.35
+          tension:.35,
+          order:0
         },
         {
           type:"line",
@@ -855,10 +836,11 @@ function updateCarbonGeneration(){
           data:rainfallAdjusted,
           borderColor:a.color,
           backgroundColor:a.color,
-          borderWidth:3,
-          borderDash:[10,6],
+          borderWidth:4,
+          borderDash:[10,5],
           pointRadius:0,
-          tension:.35
+          tension:.35,
+          order:-1
         }
       ];
     })
