@@ -320,13 +320,14 @@ Explore scenarios
     <h3 style="margin:8px 0 8px;font-size:18px;">Carbon forecasts are biological forecasts first.</h3>
     <p>Before a project can sell carbon credits, it needs trees to survive, grow, and accumulate carbon over time.</p>
     <p>The same project size can produce very different carbon curves depending on rainfall, growth speed, survival, and system type.</p>
+    <p>Semi-arid systems are generally more sensitive to water stress than humid tropical systems.</p>
     <p><strong>Design choice:</strong> one simple rainfall/water control changes curve shape. It is not a carbon accounting input yet.</p>
 
     <div id="module2a-controls">
       <div class="sales-control">
         <div class="control-head">
           <div>
-            <div style="font-weight:750;">Rainfall / water availability</div>
+            <div style="font-weight:750;">Water availability / water availability</div>
             <div class="note">Simplified index. Lower water slows growth, especially in semi-arid systems.</div>
           </div>
           <div class="control-right">
@@ -334,7 +335,7 @@ Explore scenarios
             <button class="mini-reset" onclick="resetModule2A()">Reset</button>
           </div>
         </div>
-        <input id="input-module2a-rainfall" type="range" min="60" max="140" step="5" value="80" oninput="setModule2AInput('rainfall', Number(this.value))" />
+        <input id="input-module2a-rainfall" type="range" min="60" max="140" step="5" value="100" oninput="setModule2AInput('rainfall', Number(this.value))" />
       </div>
     </div>
 
@@ -778,8 +779,20 @@ function interpolateCurve(curve,position){
 
 function relativeBiomassForArchetype(archetype, adjusted=false){
   const rainfallRatio=adjusted ? module2AInputs.rainfall/100 : 1;
-  const slopeMultiplier=Math.max(0.55,1+(rainfallRatio-1)*archetype.waterSlopeSensitivity);
-  const ceilingMultiplier=Math.max(0.70,1+(rainfallRatio-1)*archetype.waterCeilingSensitivity);
+
+  const stressFactor = rainfallRatio < 1
+    ? (rainfallRatio - 1) * 1.4
+    : (rainfallRatio - 1) * 0.45;
+
+  const slopeMultiplier=Math.max(
+    0.45,
+    1 + stressFactor * archetype.waterSlopeSensitivity
+  );
+
+  const ceilingMultiplier=Math.max(
+    0.65,
+    1 + stressFactor * archetype.waterCeilingSensitivity
+  );
 
   return Array.from({length:21},(_,year)=>{
     const adjustedYear=Math.min(20,year*slopeMultiplier);
@@ -808,7 +821,7 @@ function updateCarbonGeneration(){
   document.getElementById("carbon-generation-legend").innerHTML=
   carbonArchetypes.map(a=>
     `<span class="legend-item"><span class="legend-line" style="border-color:${a.color}"></span>${a.label} baseline</span>
-     <span class="legend-item"><span class="legend-line dashed" style="border-color:${a.color}"></span>${a.label} rainfall-adjusted</span>`
+     <span class="legend-item"><span class="legend-line dashed" style="border-color:${a.color}"></span>${a.label} water-adjusted</span>`
   ).join("");
 
   const data={
@@ -836,8 +849,9 @@ function updateCarbonGeneration(){
           data:rainfallAdjusted,
           borderColor:a.color,
           backgroundColor:a.color,
-          borderWidth:4,
+          borderWidth:3,
           borderDash:[10,5],
+          borderColor:a.color + "AA",
           pointRadius:0,
           tension:.35,
           order:-1
