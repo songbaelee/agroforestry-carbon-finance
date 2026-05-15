@@ -301,7 +301,7 @@ Explore scenarios
 <section id="carbon-sales" class="module-section">
 <div class="card sensitivity-card">
 <div class="module-kicker">Module 2A</div>
-<h2>Carbon generation forecasts</h2><p class="note" style="margin-top:8px;">The Y-axis is normalized. A value of 100 represents relative biological maturity within each archetype rather than exact tons or credits.</p>
+<h2>Carbon generation forecasts</h2><p class="note" style="margin-top:8px;">The Y-axis is normalized. A value of 100 represents the highest relative biomass accumulation shown here, not exact tons or credits.</p>
 <p class="module-question">Why do biological assumptions change the carbon curve so much?</p>
 
 <div class="carbon-sales-layout">
@@ -335,6 +335,7 @@ Explore scenarios
       <h3 style="margin:8px 0 8px;font-size:17px;">Colombia Sustainable Agroforestry Cacao Program</h3>
       <p><strong>Country:</strong> Colombia</p>
       <p>Higher long-run biomass potential with faster accumulation in humid tropical conditions.</p>
+      <p><a href="https://www.terraglobalcapital.com/colombia-sustainable-agroforestry-cacao/" target="_blank" rel="noopener noreferrer">Learn more</a></p>
     </div>
 
     <div class="sales-note-card">
@@ -342,6 +343,7 @@ Explore scenarios
       <h3 style="margin:8px 0 8px;font-size:17px;">Asómbrate Programme (ACORN)</h3>
       <p><strong>Country:</strong> Colombia</p>
       <p>Moderate but steady accumulation integrated into smallholder coffee and cocoa systems.</p>
+      <p><a href="https://www.solidaridadnetwork.org/story/asombrate-promoting-climate-smart-agriculture-harvesting-carbon-credits/" target="_blank" rel="noopener noreferrer">Learn more</a></p>
     </div>
 
     <div class="sales-note-card">
@@ -349,6 +351,7 @@ Explore scenarios
       <h3 style="margin:8px 0 8px;font-size:17px;">Humbo FMNR Project</h3>
       <p><strong>Country:</strong> Ethiopia</p>
       <p>Slower and more rainfall-sensitive accumulation through assisted natural regeneration.</p>
+      <p><a href="https://www.worldvision.org/economic-empowerment-news-stories/ethiopia-forest-project-united-nations-carbon-credits" target="_blank" rel="noopener noreferrer">Learn more</a></p>
     </div>
 
   </div>
@@ -711,31 +714,28 @@ const carbonArchetypes=[
     label:"Humid tropical agroforestry",
     note:"Faster early growth and higher long-run carbon generation.",
     color:"#059669",
-    annualCreditsAtMaturity:1900,
+    maxIndex:100,
     curve:[0,0.03,0.08,0.16,0.28,0.42,0.58,0.72,0.84,0.92,0.97,1,1,1,1,1,1,1,1,1,1]
   },
   {
     label:"Shade-grown perennial systems",
     note:"Moderate growth, often steadier but still slow in early years.",
     color:"#2563eb",
-    annualCreditsAtMaturity:1500,
+    maxIndex:82,
     curve:[0,0.02,0.05,0.10,0.18,0.28,0.40,0.54,0.68,0.80,0.90,0.96,1,1,1,1,1,1,1,1,1]
   },
   {
     label:"Semi-arid agroforestry",
     note:"Slower growth and lower long-run carbon generation.",
     color:"#ea580c",
-    annualCreditsAtMaturity:1050,
+    maxIndex:62,
     curve:[0,0.01,0.025,0.05,0.09,0.14,0.21,0.30,0.40,0.50,0.60,0.70,0.78,0.85,0.91,0.96,1,1,1,1,1]
   }
 ];
 
-function cumulativeCreditsForArchetype(archetype){
-  let cumulative=0;
+function relativeBiomassForArchetype(archetype){
   return Array.from({length:21},(_,year)=>{
-    const annualCredits=archetype.annualCreditsAtMaturity*archetype.curve[Math.min(year,archetype.curve.length-1)];
-    cumulative+=annualCredits;
-    return cumulative;
+    return archetype.maxIndex * archetype.curve[Math.min(year,archetype.curve.length-1)];
   });
 }
 
@@ -751,7 +751,7 @@ function updateCarbonGeneration(){
     datasets:carbonArchetypes.map(a=>({
       type:"line",
       label:a.label,
-      data:cumulativeCreditsForArchetype(a),
+      data:relativeBiomassForArchetype(a),
       borderColor:a.color,
       backgroundColor:a.color,
       borderWidth:4,
@@ -769,7 +769,7 @@ function updateCarbonGeneration(){
       tooltip:{
         callbacks:{
           label:function(context){
-            return `${context.dataset.label}: ${fmtNum(context.raw)} relative biomass index`;
+            return `${context.dataset.label}: ${fmtNum(context.raw)} / 100 relative biomass index`;
           }
         }
       }
@@ -778,10 +778,10 @@ function updateCarbonGeneration(){
       x:{grid:{color:"#e2e8f0"}},
       y:{
         beginAtZero:true,
-        max:30000,
+        max:100,
         ticks:{callback:(v)=>fmtNum(v)},
         grid:{color:"#e2e8f0"},
-        title:{display:true,text:"Relative biomass accumulation (normalized)"}
+        title:{display:true,text:"Relative biomass accumulation index"}
       }
     }
   };
