@@ -313,21 +313,24 @@ Explore scenarios
     <p class="note" style="margin-top:18px;font-size:15px;line-height:1.55;">
       This view compares simplified biological growth patterns across agroforestry archetypes. The curves are normalized for educational purposes rather than tied to exact hectares, tons, or issued credits. The core intuition is simple: trees grow slowly, and timing matters.
     </p>
+    <p class="note" style="margin-top:8px;font-size:15px;line-height:1.55;">
+      Solid lines show the 100% baseline. Dotted lines show the water-adjusted scenario.
+    </p>
   </div>
 
   <div class="sales-note-card">
     <div class="label">Module 2A lesson</div>
     <h3 style="margin:8px 0 8px;font-size:18px;">Carbon forecasts are biological forecasts first.</h3>
     <p>Before a project can sell carbon credits, it needs trees to survive, grow, and accumulate carbon over time.</p>
-    <p>The same project size can produce very different carbon curves depending on rainfall, growth speed, survival, and system type.</p>
+    <p>The same project size can produce very different carbon curves depending on water availability, growth speed, survival, and system type.</p>
     <p>Semi-arid systems are generally more sensitive to water stress than humid tropical systems.</p>
-    <p><strong>Design choice:</strong> one simple rainfall/water control changes curve shape. It is not a carbon accounting input yet.</p>
+    <p><strong>Design choice:</strong> one simple water availability control changes curve shape. It is not a carbon accounting input yet.</p>
 
     <div id="module2a-controls">
       <div class="sales-control">
         <div class="control-head">
           <div>
-            <div style="font-weight:750;">Water availability / water availability</div>
+            <div style="font-weight:750;">Water availability</div>
             <div class="note">Simplified index. Lower water slows growth, especially in semi-arid systems.</div>
           </div>
           <div class="control-right">
@@ -375,7 +378,7 @@ Explore scenarios
       <div class="label">Semi-arid restoration systems</div>
       <h3 style="margin:8px 0 8px;font-size:17px;">Humbo FMNR Project</h3>
       <p><strong>Country:</strong> Ethiopia</p>
-      <p>Slower and more rainfall-sensitive accumulation through assisted natural regeneration.</p>
+      <p>Slower and more water-sensitive accumulation through assisted natural regeneration.</p>
       <p><a href="https://www.worldvision.org/economic-empowerment-news-stories/ethiopia-forest-project-united-nations-carbon-credits" target="_blank" rel="noopener noreferrer">Learn more</a></p>
     </div>
 
@@ -735,7 +738,7 @@ mainChart=new Chart(document.getElementById("mainChart"),{data,options});
    MODULE 2A: CARBON GENERATION FORECASTS
    ========================================================= */
 let carbonGenerationChart=null;
-const module2ADefaults={rainfall:80};
+const module2ADefaults={rainfall:100};
 let module2AInputs={...module2ADefaults};
 
 const carbonArchetypes=[
@@ -761,8 +764,8 @@ const carbonArchetypes=[
     label:"Semi-arid agroforestry",
     note:"Slower growth and lower long-run carbon generation.",
     color:"#ea580c",
-    waterSlopeSensitivity:0.65,
-    waterCeilingSensitivity:0.25,
+    waterSlopeSensitivity:1.15,
+    waterCeilingSensitivity:0.80,
     maxIndex:62,
     curve:[0,0.01,0.025,0.05,0.09,0.14,0.21,0.30,0.40,0.50,0.60,0.70,0.78,0.85,0.91,0.96,1,1,1,1,1]
   }
@@ -816,7 +819,7 @@ function resetModule2A(){
 function updateCarbonGeneration(){
   const years=Array.from({length:21},(_,year)=>year);
   const rainfallValue=document.getElementById("val-module2a-rainfall");
-  if(rainfallValue) rainfallValue.textContent=`${fmtNum(module2AInputs.rainfall)} index`;
+  if(rainfallValue) rainfallValue.textContent=`${fmtNum(module2AInputs.rainfall)}%`;
 
   document.getElementById("carbon-generation-legend").innerHTML=
   carbonArchetypes.map(a=>
@@ -847,11 +850,10 @@ function updateCarbonGeneration(){
           type:"line",
           label:a.label + " water-adjusted",
           data:rainfallAdjusted,
-          borderColor:a.color,
+          borderColor:a.color + "AA",
           backgroundColor:a.color,
           borderWidth:3,
           borderDash:[10,5],
-          borderColor:a.color + "AA",
           pointRadius:0,
           tension:.35,
           order:-1
