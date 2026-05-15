@@ -320,7 +320,23 @@ Explore scenarios
     <h3 style="margin:8px 0 8px;font-size:18px;">Carbon forecasts are biological forecasts first.</h3>
     <p>Before a project can sell carbon credits, it needs trees to survive, grow, and accumulate carbon over time.</p>
     <p>The same project size can produce very different carbon curves depending on rainfall, growth speed, survival, and system type.</p>
-    <p><strong>Design choice:</strong> no sliders yet. The first job is to compare curve shapes, not optimize assumptions.</p>
+    <p><strong>Design choice:</strong> one simple rainfall/water control changes curve shape. It is not a carbon accounting input yet.</p>
+
+    <div id="module2a-controls">
+      <div class="sales-control">
+        <div class="control-head">
+          <div>
+            <div style="font-weight:750;">Rainfall / water availability</div>
+            <div class="note">Simplified index. Lower water slows growth, especially in semi-arid systems.</div>
+          </div>
+          <div class="control-right">
+            <div class="control-value" id="val-module2a-rainfall"></div>
+            <button class="mini-reset" onclick="resetModule2A()">Reset</button>
+          </div>
+        </div>
+        <input id="input-module2a-rainfall" type="range" min="60" max="140" step="5" value="100" oninput="setModule2AInput('rainfall', Number(this.value))" />
+      </div>
+    </div>
 
     <div class="coming-next" style="margin-top:18px;">
       Next in Module 2B: separate carbon generated from carbon verified, issued, contracted, and sold.
@@ -718,12 +734,16 @@ mainChart=new Chart(document.getElementById("mainChart"),{data,options});
    MODULE 2A: CARBON GENERATION FORECASTS
    ========================================================= */
 let carbonGenerationChart=null;
+const module2ADefaults={rainfall:100};
+let module2AInputs={...module2ADefaults};
 
 const carbonArchetypes=[
   {
     label:"Humid tropical agroforestry",
     note:"Faster early growth and higher long-run carbon generation.",
     color:"#059669",
+    waterSlopeSensitivity:0.25,
+    waterCeilingSensitivity:0.05,
     maxIndex:100,
     curve:[0,0.03,0.08,0.16,0.28,0.42,0.58,0.72,0.84,0.92,0.97,1,1,1,1,1,1,1,1,1,1]
   },
@@ -731,6 +751,8 @@ const carbonArchetypes=[
     label:"Shade-grown perennial systems",
     note:"Moderate growth, often steadier but still slow in early years.",
     color:"#2563eb",
+    waterSlopeSensitivity:0.35,
+    waterCeilingSensitivity:0.10,
     maxIndex:82,
     curve:[0,0.02,0.05,0.10,0.18,0.28,0.40,0.54,0.68,0.80,0.90,0.96,1,1,1,1,1,1,1,1,1]
   },
@@ -738,19 +760,50 @@ const carbonArchetypes=[
     label:"Semi-arid agroforestry",
     note:"Slower growth and lower long-run carbon generation.",
     color:"#ea580c",
+    waterSlopeSensitivity:0.65,
+    waterCeilingSensitivity:0.25,
     maxIndex:62,
     curve:[0,0.01,0.025,0.05,0.09,0.14,0.21,0.30,0.40,0.50,0.60,0.70,0.78,0.85,0.91,0.96,1,1,1,1,1]
   }
 ];
 
+function interpolateCurve(curve,position){
+  const lower=Math.floor(position);
+  const upper=Math.ceil(position);
+  if(lower>=curve.length-1) return curve[curve.length-1];
+  if(lower===upper) return curve[lower];
+  const share=position-lower;
+  return curve[lower]+(curve[upper]-curve[lower])*share;
+}
+
 function relativeBiomassForArchetype(archetype){
+  const rainfallRatio=module2AInputs.rainfall/100;
+  const slopeMultiplier=Math.max(0.55,1+(rainfallRatio-1)*archetype.waterSlopeSensitivity);
+  const ceilingMultiplier=Math.max(0.70,1+(rainfallRatio-1)*archetype.waterCeilingSensitivity);
+
   return Array.from({length:21},(_,year)=>{
-    return archetype.maxIndex * archetype.curve[Math.min(year,archetype.curve.length-1)];
+    const adjustedYear=Math.min(20,year*slopeMultiplier);
+    const curveValue=interpolateCurve(archetype.curve,adjustedYear);
+    return Math.min(100,archetype.maxIndex*ceilingMultiplier*curveValue);
   });
+}
+
+function setModule2AInput(key,value){
+  module2AInputs[key]=value;
+  updateCarbonGeneration();
+}
+
+function resetModule2A(){
+  module2AInputs={...module2ADefaults};
+  const input=document.getElementById("input-module2a-rainfall");
+  if(input) input.value=module2AInputs.rainfall;
+  updateCarbonGeneration();
 }
 
 function updateCarbonGeneration(){
   const years=Array.from({length:21},(_,year)=>year);
+  const rainfallValue=document.getElementById("val-module2a-rainfall");
+  if(rainfallValue) rainfallValue.textContent=`${fmtNum(module2AInputs.rainfall)} index`;
 
   document.getElementById("carbon-generation-legend").innerHTML=carbonArchetypes.map(a=>
     `<span class="legend-item"><span class="legend-line" style="border-color:${a.color}"></span>${a.label}</span>`
