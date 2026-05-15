@@ -776,8 +776,8 @@ function interpolateCurve(curve,position){
   return curve[lower]+(curve[upper]-curve[lower])*share;
 }
 
-function relativeBiomassForArchetype(archetype){
-  const rainfallRatio=module2AInputs.rainfall/100;
+function relativeBiomassForArchetype(archetype, adjusted=false){
+  const rainfallRatio=adjusted ? module2AInputs.rainfall/100 : 1;
   const slopeMultiplier=Math.max(0.55,1+(rainfallRatio-1)*archetype.waterSlopeSensitivity);
   const ceilingMultiplier=Math.max(0.70,1+(rainfallRatio-1)*archetype.waterCeilingSensitivity);
 
@@ -821,7 +821,7 @@ function updateCarbonGeneration(){
       return [
         {
           type:"line",
-          label:a.label + " baseline",
+          label:a.label + " 100% baseline",
           data:baseline,
           borderColor:a.color,
           backgroundColor:a.color,
@@ -832,7 +832,7 @@ function updateCarbonGeneration(){
         },
         {
           type:"line",
-          label:a.label + " rainfall-adjusted",
+          label:a.label + " water-adjusted",
           data:rainfallAdjusted,
           borderColor:a.color,
           backgroundColor:a.color,
