@@ -343,7 +343,7 @@ Explore scenarios
     </div>
 
     <div class="coming-next" style="margin-top:18px;">
-      Next in Module 2B: separate carbon generated from carbon verified, issued, contracted, and sold.
+      Module 2B below separates carbon generated from carbon verified, issued, and sold.
     </div>
   </div>
 
@@ -385,6 +385,64 @@ Explore scenarios
   </div>
 </div>
 
+</div>
+
+<div class="module2b-section" style="margin-top:32px;padding-top:28px;border-top:1px solid var(--line);">
+  <div class="module-kicker">Module 2B</div>
+  <h2>Carbon generated vs. verified, issued, and sold</h2>
+  <p class="note" style="margin-top:8px;">This view uses one representative archetype to isolate the timing lesson: carbon can exist biologically before it becomes financially usable.</p>
+  <p class="module-question">When does biological carbon become usable project revenue?</p>
+
+  <div class="carbon-sales-layout">
+    <div>
+      <div class="carbon-chart-wrap"><canvas id="carbonTimingChart"></canvas></div>
+      <div id="carbon-timing-legend" class="custom-legend"></div>
+      <p class="note" style="margin-top:18px;font-size:15px;line-height:1.55;">
+        The generated line shows the biological accumulation curve. Verification, issuance, and sale/payment are shown as later timing layers. The curves use the same underlying carbon pattern, shifted later to show process delays.
+      </p>
+    </div>
+
+    <div class="sales-note-card">
+      <div class="label">Module 2B lesson</div>
+      <h3 style="margin:8px 0 8px;font-size:18px;">Carbon can exist before cash exists.</h3>
+      <p>Trees may already be storing carbon, but the project usually cannot use that value financially until carbon is verified, credits are issued, and credits are sold or paid for.</p>
+      <p><strong>Design choice:</strong> Module 2B uses the shade-grown perennial archetype from Module 2A so the timing layers stay readable.</p>
+
+      <div id="module2b-controls">
+        <div class="sales-control">
+          <div class="control-head">
+            <div>
+              <div style="font-weight:750;">Verification delay</div>
+              <div class="note">Years between carbon generation and verified carbon.</div>
+            </div>
+            <div class="control-right">
+              <div class="control-value" id="val-module2b-verification-delay"></div>
+              <button class="mini-reset" onclick="resetModule2BInput('verificationDelay')">Reset</button>
+            </div>
+          </div>
+          <input id="input-module2b-verification-delay" type="range" min="0" max="5" step="1" value="2" oninput="setModule2BInput('verificationDelay', Number(this.value))" />
+        </div>
+
+        <div class="sales-control">
+          <div class="control-head">
+            <div>
+              <div style="font-weight:750;">Sale / payment delay</div>
+              <div class="note">Additional years before issued credits are sold or cash is received.</div>
+            </div>
+            <div class="control-right">
+              <div class="control-value" id="val-module2b-payment-delay"></div>
+              <button class="mini-reset" onclick="resetModule2BInput('paymentDelay')">Reset</button>
+            </div>
+          </div>
+          <input id="input-module2b-payment-delay" type="range" min="0" max="5" step="1" value="1" oninput="setModule2BInput('paymentDelay', Number(this.value))" />
+        </div>
+      </div>
+
+      <div class="coming-next" style="margin-top:18px;">
+        Later modules can connect this timing gap back to project costs, bridge finance, and benefit sharing.
+      </div>
+    </div>
+  </div>
 </div>
 
 </div>
@@ -895,6 +953,144 @@ function updateCarbonGeneration(){
 
 
 
+/* =========================================================
+   MODULE 2B: CARBON TIMING LAYERS
+   ========================================================= */
+let carbonTimingChart=null;
+const module2BDefaults={verificationDelay:2,paymentDelay:1};
+let module2BInputs={...module2BDefaults};
+const module2BIssuanceDelay=1;
+
+function shiftTimingSeries(series,delay){
+  return series.map((_,year)=>{
+    const sourceYear=year-delay;
+    return sourceYear>=0 ? series[sourceYear] : 0;
+  });
+}
+
+function setModule2BInput(key,value){
+  module2BInputs[key]=value;
+  updateCarbonTiming();
+}
+
+function resetModule2BInput(key){
+  module2BInputs[key]=module2BDefaults[key];
+  const inputId=key==="verificationDelay" ? "input-module2b-verification-delay" : "input-module2b-payment-delay";
+  const input=document.getElementById(inputId);
+  if(input) input.value=module2BInputs[key];
+  updateCarbonTiming();
+}
+
+function updateCarbonTiming(){
+  const chartCanvas=document.getElementById("carbonTimingChart");
+  if(!chartCanvas) return;
+
+  const verificationValue=document.getElementById("val-module2b-verification-delay");
+  if(verificationValue) verificationValue.textContent=`${fmtNum(module2BInputs.verificationDelay)} years`;
+
+  const paymentValue=document.getElementById("val-module2b-payment-delay");
+  if(paymentValue) paymentValue.textContent=`${fmtNum(module2BInputs.paymentDelay)} years`;
+
+  const years=Array.from({length:21},(_,year)=>year);
+  const representative=carbonArchetypes.find(a=>a.label==="Shade-grown perennial systems") || carbonArchetypes[1];
+  const generated=relativeBiomassForArchetype(representative,false);
+  const verified=shiftTimingSeries(generated,module2BInputs.verificationDelay);
+  const issued=shiftTimingSeries(generated,module2BInputs.verificationDelay+module2BIssuanceDelay);
+  const sold=shiftTimingSeries(generated,module2BInputs.verificationDelay+module2BIssuanceDelay+module2BInputs.paymentDelay);
+
+  document.getElementById("carbon-timing-legend").innerHTML=`
+    <span class="legend-item"><span class="legend-line" style="border-color:#059669"></span>Carbon generated</span>
+    <span class="legend-item"><span class="legend-line dashed" style="border-color:#2563eb"></span>Verified carbon</span>
+    <span class="legend-item"><span class="legend-line dashed" style="border-color:#ea580c"></span>Credits issued</span>
+    <span class="legend-item"><span class="legend-line dashed" style="border-color:#0f172a"></span>Sold / cash received</span>
+  `;
+
+  const data={
+    labels:years.map(year=>`Year ${year}`),
+    datasets:[
+      {
+        type:"line",
+        label:"Carbon generated",
+        data:generated,
+        borderColor:"#059669",
+        backgroundColor:"#059669",
+        borderWidth:4,
+        pointRadius:0,
+        tension:.35,
+        order:0
+      },
+      {
+        type:"line",
+        label:"Verified carbon",
+        data:verified,
+        borderColor:"#2563eb",
+        backgroundColor:"#2563eb",
+        borderWidth:3,
+        borderDash:[10,5],
+        pointRadius:0,
+        tension:.35,
+        order:1
+      },
+      {
+        type:"line",
+        label:"Credits issued",
+        data:issued,
+        borderColor:"#ea580c",
+        backgroundColor:"#ea580c",
+        borderWidth:3,
+        borderDash:[4,5],
+        pointRadius:0,
+        tension:.35,
+        order:2
+      },
+      {
+        type:"line",
+        label:"Sold / cash received",
+        data:sold,
+        borderColor:"#0f172a",
+        backgroundColor:"#0f172a",
+        borderWidth:3,
+        borderDash:[2,6],
+        pointRadius:0,
+        tension:.35,
+        order:3
+      }
+    ]
+  };
+
+  const options={
+    responsive:true,
+    maintainAspectRatio:false,
+    animation:{duration:350},
+    interaction:{mode:"index",intersect:false},
+    plugins:{
+      legend:{display:false},
+      tooltip:{
+        callbacks:{
+          label:function(context){
+            return `${context.dataset.label}: ${fmtNum(context.raw)} / 100 relative carbon index`;
+          }
+        }
+      }
+    },
+    scales:{
+      x:{grid:{color:"#e2e8f0"}},
+      y:{
+        beginAtZero:true,
+        max:105,
+        ticks:{stepSize:20,callback:(v)=>v>100?"":fmtNum(v)},
+        grid:{color:"#e2e8f0"},
+        title:{display:true,text:"Relative cumulative carbon index"}
+      }
+    }
+  };
+
+  if(carbonTimingChart) carbonTimingChart.destroy();
+  carbonTimingChart=new Chart(chartCanvas,{data,options});
+}
+
+
+
 /* Build sensitivity table for carbon price and project length combinations */
 function calculateSurplusFor(price,years){
 const saved={...inputs};
@@ -952,7 +1148,7 @@ function initializeStageAccordion(){
   });
 }
 
-buildStatic();update();buildSensitivityTable();initializeStageAccordion();updateCarbonGeneration();
+buildStatic();update();buildSensitivityTable();initializeStageAccordion();updateCarbonGeneration();updateCarbonTiming();
 
 </script>
 </body>
