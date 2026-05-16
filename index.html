@@ -431,6 +431,65 @@ Explore scenarios
   </div>
 </div>
 </div>
+
+<div class="module2c-section" style="margin-top:32px;padding-top:28px;border-top:1px solid var(--line);">
+  <div class="module-kicker">Module 2C</div>
+  <h2>Verified carbon pricing</h2>
+  <p class="note" style="margin-top:8px;">This view uses verified carbon from Module 2B and translates it into potential revenue.</p>
+  <p class="module-question">Why can the same verified carbon produce different revenue outcomes?</p>
+
+  <div class="carbon-sales-layout">
+    <div>
+      <div class="carbon-chart-wrap"><canvas id="carbonPricingChart"></canvas></div>
+      <div id="carbon-pricing-legend" class="custom-legend"></div>
+      <p class="note" style="margin-top:18px;font-size:15px;line-height:1.55;">
+        Both lines use the same verified carbon quantity. The difference is price: a contracted price creates more predictable revenue, while a future spot price can be higher or lower.
+      </p>
+    </div>
+
+    <div class="sales-note-card">
+      <div class="label">Module 2C lesson</div>
+      <h3 style="margin:8px 0 8px;font-size:18px;">Verified carbon still has market risk.</h3>
+      <p>Verification makes carbon more usable, but pricing determines how much revenue it can generate.</p>
+      <p><strong>Design choice:</strong> Module 2C compares a simple advance purchase price with a future spot price expectation.</p>
+
+      <div id="module2c-controls">
+        <div class="sales-control">
+          <div class="control-head">
+            <div>
+              <div style="font-weight:750;">Contract price</div>
+              <div class="note">Simplified advance purchase price per verified credit.</div>
+            </div>
+            <div class="control-right">
+              <div class="control-value" id="val-module2c-contract-price"></div>
+              <button class="mini-reset" onclick="resetModule2CInput('contractPrice')">Reset</button>
+            </div>
+          </div>
+          <input id="input-module2c-contract-price" type="range" min="5" max="40" step="1" value="15" oninput="setModule2CInput('contractPrice', Number(this.value))" />
+        </div>
+
+        <div class="sales-control">
+          <div class="control-head">
+            <div>
+              <div style="font-weight:750;">Spot price expectation</div>
+              <div class="note">Simplified future market price per verified credit.</div>
+            </div>
+            <div class="control-right">
+              <div class="control-value" id="val-module2c-spot-price"></div>
+              <button class="mini-reset" onclick="resetModule2CInput('spotPrice')">Reset</button>
+            </div>
+          </div>
+          <input id="input-module2c-spot-price" type="range" min="5" max="60" step="1" value="25" oninput="setModule2CInput('spotPrice', Number(this.value))" />
+        </div>
+      </div>
+
+      <div class="coming-next" style="margin-top:18px;">
+        Later modules can connect pricing choices to funding gaps, financing cost, and investor risk.
+      </div>
+    </div>
+  </div>
+</div>
+</div>
 </section>
 
 
@@ -956,6 +1015,7 @@ function shiftTimingSeries(series,delay){
 function setModule2BInput(key,value){
   module2BInputs[key]=value;
   updateCarbonTiming();
+  updateCarbonPricing();
 }
 
 function resetModule2BInput(key){
@@ -963,6 +1023,7 @@ function resetModule2BInput(key){
   const input=document.getElementById("input-module2b-verification-delay");
   if(input) input.value=module2BInputs[key];
   updateCarbonTiming();
+  updateCarbonPricing();
 }
 
 function updateCarbonTiming(){
@@ -1073,6 +1134,116 @@ document.getElementById("sensitivity-table").innerHTML=header+body;
 
 
 
+/* =========================================================
+   MODULE 2C: VERIFIED CARBON PRICING
+   ========================================================= */
+let carbonPricingChart=null;
+const module2CDefaults={contractPrice:15,spotPrice:25};
+let module2CInputs={...module2CDefaults};
+
+function setModule2CInput(key,value){
+  module2CInputs[key]=value;
+  updateCarbonPricing();
+}
+
+function resetModule2CInput(key){
+  module2CInputs[key]=module2CDefaults[key];
+  const inputId=key==="contractPrice" ? "input-module2c-contract-price" : "input-module2c-spot-price";
+  const input=document.getElementById(inputId);
+  if(input) input.value=module2CInputs[key];
+  updateCarbonPricing();
+}
+
+function relativeIndexToCredits(indexValue){
+  const hectares=scenario.farmers*scenario.hectaresPerFarmer;
+  const treesPlanted=hectares*scenario.treesPerHa;
+  const survivingTrees=treesPlanted*(scenario.survivalRate/100);
+  const matureCredits=survivingTrees*scenario.carbonPerTreeAtMaturity;
+  return matureCredits*(indexValue/100);
+}
+
+function updateCarbonPricing(){
+  const chartCanvas=document.getElementById("carbonPricingChart");
+  if(!chartCanvas) return;
+
+  const contractValue=document.getElementById("val-module2c-contract-price");
+  const spotValue=document.getElementById("val-module2c-spot-price");
+  if(contractValue) contractValue.textContent=`$${fmtNum(module2CInputs.contractPrice)}/credit`;
+  if(spotValue) spotValue.textContent=`$${fmtNum(module2CInputs.spotPrice)}/credit`;
+
+  const years=Array.from({length:21},(_,year)=>year);
+  const representative=carbonArchetypes.find(a=>a.label==="Shade-grown perennial systems") || carbonArchetypes[1];
+  const generated=relativeBiomassForArchetype(representative,false);
+  const verified=shiftTimingSeries(generated,module2BInputs.verificationDelay);
+
+  const contractRevenue=verified.map(indexValue=>relativeIndexToCredits(indexValue)*module2CInputs.contractPrice);
+  const spotRevenue=verified.map(indexValue=>relativeIndexToCredits(indexValue)*module2CInputs.spotPrice);
+
+  document.getElementById("carbon-pricing-legend").innerHTML=`
+    <span class="legend-item"><span class="legend-line" style="border-color:#2563eb"></span>Contracted revenue</span>
+    <span class="legend-item"><span class="legend-line dashed" style="border-color:#0f172a"></span>Spot-market revenue</span>
+  `;
+
+  const data={
+    labels:years.map(year=>`Year ${year}`),
+    datasets:[
+      {
+        type:"line",
+        label:"Contracted revenue",
+        data:contractRevenue,
+        borderColor:"#2563eb",
+        backgroundColor:"#2563eb",
+        borderWidth:4,
+        pointRadius:0,
+        tension:.35,
+        order:0
+      },
+      {
+        type:"line",
+        label:"Spot-market revenue",
+        data:spotRevenue,
+        borderColor:"#0f172a",
+        backgroundColor:"#0f172a",
+        borderWidth:3,
+        borderDash:[10,5],
+        pointRadius:0,
+        tension:.35,
+        order:1
+      }
+    ]
+  };
+
+  const options={
+    responsive:true,
+    maintainAspectRatio:false,
+    animation:{duration:350},
+    interaction:{mode:"index",intersect:false},
+    plugins:{
+      legend:{display:false},
+      tooltip:{
+        callbacks:{
+          label:function(context){
+            return `${context.dataset.label}: ${fmtMoney(context.raw)}`;
+          }
+        }
+      }
+    },
+    scales:{
+      x:{grid:{color:"#e2e8f0"}},
+      y:{
+        beginAtZero:true,
+        ticks:{callback:(v)=>fmtMoney(v)},
+        grid:{color:"#e2e8f0"},
+        title:{display:true,text:"Annual revenue from verified carbon"}
+      }
+    }
+  };
+
+  if(carbonPricingChart) carbonPricingChart.destroy();
+  carbonPricingChart=new Chart(chartCanvas,{data,options});
+}
+
+
 function initializeStageAccordion(){
   stageIds.forEach(stageId=>{
     const detail = document.getElementById(stageConfig[stageId].detailsId);
@@ -1101,7 +1272,7 @@ function initializeStageAccordion(){
   });
 }
 
-buildStatic();update();buildSensitivityTable();initializeStageAccordion();updateCarbonGeneration();updateCarbonTiming();updateCarbonTiming();
+buildStatic();update();buildSensitivityTable();initializeStageAccordion();updateCarbonGeneration();updateCarbonTiming();updateCarbonPricing();
 
 </script>
 </body>
