@@ -163,6 +163,17 @@ li{margin-bottom:8px;line-height:1.6;color:var(--muted)}
 .cost-category-item:last-child{border-bottom:0}
 .cost-category-item span:first-child{font-weight:750;color:var(--text)}
 .cost-category-item span:last-child{font-weight:800;color:var(--muted);white-space:nowrap}
+
+.pacing-choice-grid{display:grid;grid-template-columns:1fr;gap:8px;margin-top:14px}
+.pacing-choice{display:flex;justify-content:space-between;align-items:center;gap:12px;width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:14px;background:#fff;text-align:left}
+.pacing-choice.active{border-color:#2563eb;background:#eff6ff}
+.pacing-choice span:first-child{font-weight:800;color:var(--text)}
+.pacing-choice span:last-child{font-size:13px;color:var(--muted);font-weight:700}
+.pacing-metric-grid{display:grid;grid-template-columns:1fr;gap:8px;margin-top:14px}
+.pacing-metric{display:flex;justify-content:space-between;gap:12px;padding:10px 12px;border:1px solid var(--line);border-radius:14px;background:#f8fafc}
+.pacing-metric span:first-child{font-size:13px;color:var(--muted);font-weight:750}
+.pacing-metric span:last-child{font-weight:850;color:var(--text)}
+
 @media(max-width:1000px){.module3-layout{grid-template-columns:1fr}}
 
 @media(max-width:1000px){.carbon-sales-layout{grid-template-columns:1fr}}
@@ -551,20 +562,20 @@ Explore scenarios
 <div class="card sensitivity-card" style="margin-top:24px;">
 <div class="module-kicker">Module 3B</div>
 <h2>Implementation pacing</h2>
-<p class="note" style="margin-top:8px;">This view keeps total project cost the same but changes when implementation costs are incurred.</p>
-<p class="module-question">How does rollout speed change the shape of the funding gap?</p>
+<p class="note" style="margin-top:8px;">This view keeps total implementation cost the same and changes only when the project spends the money.</p>
+<p class="module-question">How does rollout speed change upfront financing pressure?</p>
 
 <div class="module3-layout">
   <div>
-    <h3 style="margin:0 0 10px;font-size:16px;">Annual implementation spending</h3>
+    <h3 style="margin:0 0 10px;font-size:16px;">Step 1: when does the project spend money?</h3>
     <div class="module3-chart-wrap module3-short-chart"><canvas id="implementationAnnualChart"></canvas></div>
     <div id="implementation-annual-legend" class="custom-legend"></div>
 
-    <h3 style="margin:26px 0 10px;font-size:16px;">Cumulative funding pressure</h3>
+    <h3 style="margin:26px 0 10px;font-size:16px;">Step 2: how much cash must be funded over time?</h3>
     <div class="module3-chart-wrap module3-short-chart"><canvas id="implementationFundingChart"></canvas></div>
     <div id="implementation-pacing-legend" class="custom-legend"></div>
     <p class="note" style="margin-top:18px;font-size:15px;line-height:1.55;">
-      The first chart shows what changed: cost timing. The second chart shows the consequence: faster rollout creates a deeper early funding gap, while slower rollout reduces the early dip but stretches implementation timing.
+      The first chart shows the operational choice: spend quickly or spread implementation out. The second chart translates that choice into cumulative cash required. The total cost is the same, but the timing of the funding need changes.
     </p>
   </div>
 
@@ -577,15 +588,24 @@ Explore scenarios
     <div class="sales-control">
       <div class="control-head">
         <div>
-          <div style="font-weight:750;">Rollout pacing</div>
-          <div class="note">Fewer years means faster rollout and deeper early funding pressure.</div>
+          <div style="font-weight:750;">Choose the rollout scenario</div>
+          <div class="note">Each option has the same total implementation cost. Only the timing changes.</div>
         </div>
         <div class="control-right">
-          <div class="control-value" id="val-module3-rollout-years"></div>
           <button class="mini-reset" onclick="resetModule3Pacing()">Reset</button>
         </div>
       </div>
-      <input id="input-module3-rollout-years" type="range" min="1" max="5" step="1" value="3" oninput="setModule3Pacing(Number(this.value))" />
+      <div class="pacing-choice-grid" aria-label="Rollout scenario choices">
+        <button class="pacing-choice" id="pacing-choice-rapid" onclick="setModule3PacingScenario('rapid')"><span>Rapid rollout</span><span>1 year</span></button>
+        <button class="pacing-choice" id="pacing-choice-balanced" onclick="setModule3PacingScenario('balanced')"><span>Balanced rollout</span><span>3 years</span></button>
+        <button class="pacing-choice" id="pacing-choice-phased" onclick="setModule3PacingScenario('phased')"><span>Phased rollout</span><span>5 years</span></button>
+      </div>
+    </div>
+
+    <div class="pacing-metric-grid">
+      <div class="pacing-metric"><span>Selected pace</span><span id="module3-pacing-name"></span></div>
+      <div class="pacing-metric"><span>Year 0 cash need</span><span id="module3-year0-need"></span></div>
+      <div class="pacing-metric"><span>Total cost by Year 10</span><span id="module3-total-cost"></span></div>
     </div>
 
     <div class="coming-next" style="margin-top:18px;">
@@ -1215,7 +1235,12 @@ const module3CostCategories=[
   {label:"MRV",color:"#334155",values:[12000,0,0,30000,0,0,30000,0,0,30000,0]}
 ];
 
-const module3Defaults={rolloutYears:3};
+const module3PacingScenarios={
+  rapid:{label:"Rapid rollout",years:1,color:"#ea580c",note:"Costs arrive quickly."},
+  balanced:{label:"Balanced rollout",years:3,color:"#2563eb",note:"Costs are spread across three years."},
+  phased:{label:"Phased rollout",years:5,color:"#0f766e",note:"Costs are spread across five years."}
+};
+const module3Defaults={pacingScenario:"balanced"};
 let module3Inputs={...module3Defaults};
 
 function cumulativeSeries(values){
@@ -1287,20 +1312,25 @@ function implementationAnnualCosts(rolloutYears){
   return years;
 }
 
-function fundingPressureSeries(values){
+function cumulativeCashRequired(values){
   let total=0;
-  return values.map(value=>{total-=value;return total;});
+  return values.map(value=>{total+=value;return total;});
+}
+
+function setModule3PacingScenario(scenarioKey){
+  if(!module3PacingScenarios[scenarioKey]) return;
+  module3Inputs.pacingScenario=scenarioKey;
+  updateImplementationPacingChart();
 }
 
 function setModule3Pacing(value){
-  module3Inputs.rolloutYears=value;
+  const matched=Object.entries(module3PacingScenarios).find(([,scenario])=>scenario.years===value);
+  module3Inputs.pacingScenario=matched?matched[0]:"balanced";
   updateImplementationPacingChart();
 }
 
 function resetModule3Pacing(){
   module3Inputs={...module3Defaults};
-  const input=document.getElementById("input-module3-rollout-years");
-  if(input) input.value=module3Inputs.rolloutYears;
   updateImplementationPacingChart();
 }
 
@@ -1310,44 +1340,43 @@ function updateImplementationPacingChart(){
   if(!annualCanvas || !fundingCanvas) return;
 
   const years=Array.from({length:11},(_,year)=>year);
-  const selectedAnnual=implementationAnnualCosts(module3Inputs.rolloutYears);
-  const rapidAnnual=implementationAnnualCosts(1);
-  const phasedAnnual=implementationAnnualCosts(5);
-  const selectedPressure=fundingPressureSeries(selectedAnnual);
-  const rapidPressure=fundingPressureSeries(rapidAnnual);
-  const phasedPressure=fundingPressureSeries(phasedAnnual);
-  const rolloutValue=document.getElementById("val-module3-rollout-years");
-  if(rolloutValue) rolloutValue.textContent=`${fmtNum(module3Inputs.rolloutYears)} year${module3Inputs.rolloutYears===1?"":"s"}`;
+  const scenario=module3PacingScenarios[module3Inputs.pacingScenario] || module3PacingScenarios.balanced;
+  const selectedAnnual=implementationAnnualCosts(scenario.years);
+  const selectedCumulative=cumulativeCashRequired(selectedAnnual);
+  const year0Need=selectedAnnual[0];
+  const totalCost=selectedCumulative[selectedCumulative.length-1];
 
-  const selectedLabel=`Selected rollout: ${module3Inputs.rolloutYears} year${module3Inputs.rolloutYears===1?"":"s"}`;
+  Object.keys(module3PacingScenarios).forEach(key=>{
+    const button=document.getElementById(`pacing-choice-${key}`);
+    if(button) button.classList.toggle("active",key===module3Inputs.pacingScenario);
+  });
+
+  const nameEl=document.getElementById("module3-pacing-name");
+  const year0El=document.getElementById("module3-year0-need");
+  const totalEl=document.getElementById("module3-total-cost");
+  if(nameEl) nameEl.textContent=`${scenario.label} (${scenario.years} year${scenario.years===1?"":"s"})`;
+  if(year0El) year0El.textContent=fmtMoney(year0Need);
+  if(totalEl) totalEl.textContent=fmtMoney(totalCost);
 
   document.getElementById("implementation-annual-legend").innerHTML=`
-    <span class="legend-item"><span class="legend-swatch" style="background:#2563eb"></span>${selectedLabel}</span>
-    <span class="legend-item"><span class="legend-line dashed" style="border-color:#0f766e"></span>Rapid reference: 1 year</span>
-    <span class="legend-item"><span class="legend-line dashed" style="border-color:#64748b"></span>Slow reference: 5 years</span>
+    <span class="legend-item"><span class="legend-swatch" style="background:${scenario.color}"></span>${scenario.label}: annual spending</span>
   `;
 
   document.getElementById("implementation-pacing-legend").innerHTML=`
-    <span class="legend-item"><span class="legend-line" style="border-color:#2563eb"></span>${selectedLabel}</span>
-    <span class="legend-item"><span class="legend-line dashed" style="border-color:#0f766e"></span>Rapid reference: 1 year</span>
-    <span class="legend-item"><span class="legend-line dashed" style="border-color:#64748b"></span>Slow reference: 5 years</span>
+    <span class="legend-item"><span class="legend-line" style="border-color:${scenario.color}"></span>${scenario.label}: cumulative cash required</span>
   `;
 
   const annualData={
     labels:years.map(year=>`Year ${year}`),
     datasets:[
-      {type:"bar",label:selectedLabel,data:selectedAnnual,backgroundColor:"#2563eb",borderRadius:6,order:0},
-      {type:"line",label:"Rapid reference",data:rapidAnnual,borderColor:"#0f766e",backgroundColor:"#0f766e",borderWidth:3,borderDash:[10,5],pointRadius:0,tension:.2,order:1},
-      {type:"line",label:"Slow reference",data:phasedAnnual,borderColor:"#64748b",backgroundColor:"#64748b",borderWidth:3,borderDash:[3,5],pointRadius:0,tension:.2,order:2}
+      {type:"bar",label:`${scenario.label}: annual spending`,data:selectedAnnual,backgroundColor:scenario.color,borderRadius:6}
     ]
   };
 
   const fundingData={
     labels:years.map(year=>`Year ${year}`),
     datasets:[
-      {type:"line",label:selectedLabel,data:selectedPressure,borderColor:"#2563eb",backgroundColor:"#2563eb",borderWidth:4,pointRadius:0,tension:.2},
-      {type:"line",label:"Rapid reference",data:rapidPressure,borderColor:"#0f766e",backgroundColor:"#0f766e",borderWidth:3,borderDash:[10,5],pointRadius:0,tension:.2},
-      {type:"line",label:"Slow reference",data:phasedPressure,borderColor:"#64748b",backgroundColor:"#64748b",borderWidth:3,borderDash:[3,5],pointRadius:0,tension:.2}
+      {type:"line",label:`${scenario.label}: cumulative cash required`,data:selectedCumulative,borderColor:scenario.color,backgroundColor:scenario.color,borderWidth:4,pointRadius:0,tension:.2}
     ]
   };
 
@@ -1376,7 +1405,7 @@ function updateImplementationPacingChart(){
     plugins:sharedPlugins,
     scales:{
       x:{grid:{color:"#e2e8f0"}},
-      y:{ticks:{callback:(v)=>fmtMoney(v)},grid:{color:"#e2e8f0"},title:{display:true,text:"Cumulative funding pressure"}}
+      y:{beginAtZero:true,ticks:{callback:(v)=>fmtMoney(v)},grid:{color:"#e2e8f0"},title:{display:true,text:"Cumulative cash required"}}
     }
   };
 
