@@ -174,6 +174,17 @@ li{margin-bottom:8px;line-height:1.6;color:var(--muted)}
 .pacing-metric span:first-child{font-size:13px;color:var(--muted);font-weight:750}
 .pacing-metric span:last-child{font-weight:850;color:var(--text)}
 
+
+.module4-layout{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 340px;
+  gap:20px;
+  align-items:stretch;
+  margin-top:18px;
+}
+.module4-chart-wrap{height:360px}
+@media(max-width:1000px){.module4-layout{grid-template-columns:1fr}}
+
 @media(max-width:1000px){.module3-layout{grid-template-columns:1fr}}
 
 @media(max-width:1000px){.carbon-sales-layout{grid-template-columns:1fr}}
@@ -584,14 +595,97 @@ Explore scenarios
 
 </section>
 
+
+<!-- MODULE 4: FINANCEABLE RETURN GUT CHECK
+     Guardrail: Module 4 uses its own canvas ID and functions only.
+     Do not modify Module 1 chart, model(), or update() for Module 4 work. -->
+
 <section id="financing" class="module-section">
 <div class="card sensitivity-card">
-<div class="module-kicker">Module 4</div>
+<div class="module-kicker">Module 4A</div>
 <h2>Financing and blended capital</h2>
-<p class="module-question">Who funds the project before carbon revenue materializes?</p>
-<div class="coming-next">Coming next: a focused view of bridge finance, concessional capital, guarantees, repayment timing, and financing cost.</div>
+<p class="note" style="margin-top:8px;">Module 4A shifts from project survival to investor attractiveness.</p>
+<p class="module-question">How concessional does financing need to become before commercial investors may become interested?</p>
+
+<div class="module4-layout">
+  <div>
+    <div class="module4-chart-wrap"><canvas id="module4FinanceChart"></canvas></div>
+    <div id="module4-finance-legend" class="custom-legend"></div>
+
+    <p class="note" style="margin-top:18px;font-size:15px;line-height:1.55;">
+      The blue line shows simplified equity return sensitivity as financing costs fall. The dashed line represents a simplified commercial investor hurdle rate. In this simplified example, 0-2% represents highly concessional financing, while 8-10% represents more commercial risk-priced debt.
+    </p>
+  </div>
+
+  <div class="sales-note-card">
+    <div class="label">Module 4A lesson</div>
+    <h3 style="margin:8px 0 8px;font-size:18px;">Survivable is not always financeable.</h3>
+
+    <p>A project may eventually recover its costs but still fail to attract commercial investors if returns are too low relative to risk and duration.</p>
+
+    <p><strong>Design choice:</strong> instead of adding a full capital stack, Module 4 isolates one intuition: concessional financing can increase investor attractiveness.</p>
+
+    <div class="sales-control">
+      <div class="control-head">
+        <div>
+          <div style="font-weight:750;">Carbon price</div>
+          <div class="note">Higher carbon prices improve underlying project economics.</div>
+        </div>
+        <div class="control-right">
+          <div class="control-value" id="val-module4-carbon-price"></div>
+          <button class="mini-reset" onclick="resetModule4Input('carbonPrice')">Reset</button>
+        </div>
+      </div>
+      <input id="input-module4-carbon-price" type="range" min="5" max="100" step="1" value="40" oninput="setModule4Input('carbonPrice', Number(this.value))" />
+    </div>
+
+    <div id="module4-status" class="status" style="margin-top:18px;"></div>
+
+    <div class="pacing-metric-grid">
+      <div class="pacing-metric"><span>Base case</span><span id="module4-base-case"></span></div>
+      <div class="pacing-metric"><span>Unlevered project IRR</span><span id="module4-irr"></span></div>
+      <div class="pacing-metric"><span>Commercial hurdle rate</span><span>15%</span></div>
+    </div>
+  </div>
+</div>
 </div>
 </section>
+
+
+
+<section id="grant-support" class="module-section">
+<div class="card sensitivity-card">
+<div class="module-kicker">Module 4B</div>
+<h2>Grant support required to reach 15% IRR</h2>
+<p class="note" style="margin-top:8px;">Module 4B flips the financing question.</p>
+<p class="module-question">How much grant support is needed at different carbon prices to reach a 15% investor return?</p>
+
+<div class="module4-layout">
+  <div>
+    <div class="module4-chart-wrap"><canvas id="module4GrantSupportChart"></canvas></div>
+    <div id="module4-grant-legend" class="custom-legend"></div>
+
+    <p class="note" style="margin-top:18px;font-size:15px;line-height:1.55;">
+      The chart uses the same simplified cash-flow logic as Module 4A. For each carbon price, it estimates how much upfront planting cost would need to be grant-funded for the project to reach a 15% IRR.
+    </p>
+  </div>
+
+  <div class="sales-note-card">
+    <div class="label">Module 4B lesson</div>
+    <h3 style="margin:8px 0 8px;font-size:18px;">Grant capital can close the return gap.</h3>
+
+    <p>Grant funding directly reduces how much capital the project needs to recover through future carbon revenue, which can help the project reach the target return.</p>
+
+    <div class="pacing-metric-grid">
+      <div class="pacing-metric"><span>Commercial hurdle rate</span><span>15%</span></div>
+      <div class="pacing-metric"><span>Current carbon price</span><span id="module4c-carbon-price"></span></div>
+      <div class="pacing-metric"><span>Grant support needed</span><span id="module4c-grant-needed"></span></div>
+    </div>
+  </div>
+</div>
+</div>
+</section>
+
 
 <section id="benefit-sharing" class="module-section">
 <div class="card sensitivity-card">
@@ -701,7 +795,21 @@ moving into more technical tools.
 
 <script>
 /* =========================================================
-   STAGE 1A MODEL CONFIGURATION
+   CHART REGISTRY / EDITING GUARDRAILS
+   =========================================================
+   Module 1 owns: mainChart canvas, update(), model(), Stage 1 accordion logic.
+   Module 2A owns: carbonGenerationChart canvas and updateCarbonGeneration().
+   Module 2B owns: carbonTimingChart canvas and updateCarbonTiming().
+   Module 2C owns: carbonPricingChart canvas and updateCarbonPricing().
+   Module 3 owns: costCategoryChart canvas and updateCostCategoryChart().
+   Future Module 4 should use new chart IDs and new functions only.
+   Do not broad search/replace chart dataset types across modules.
+   ========================================================= */
+
+/* =========================================================
+   MODULE 1 ONLY: PROJECT ECONOMICS / STAGE ACCORDION
+   Guardrail: do not edit this block when working on Modules 2, 3, or 4.
+   Owns: mainChart, model(), update(), Stage 1 accordion.
    ========================================================= */
 const scenario={farmers:500,hectaresPerFarmer:2,treesPerHa:100,carbonPerTreeAtMaturity:0.02,plantingCostPerTree:1.5,annualMaintenancePerTree:0.18,annualProgramCostPerFarmer:18,survivalRate:75,growthSpeed:1};
 const defaults={carbonPrice:15,projectYears:10,financingRate:10,verificationDelay:2};
@@ -1189,12 +1297,11 @@ function updateCarbonTiming(){
 
 
 /* =========================================================
-   MODULE 3A AND 3B: COST STRUCTURE AND IMPLEMENTATION PACING
+   MODULE 3 ONLY: COST STRUCTURE AND ROLLOUT PACING
+   Guardrail: single Module 3 chart only. Keep as stacked bars.
+   Owns: costCategoryChart and rollout scenario buttons.
    ========================================================= */
 let costCategoryChart=null;
-let implementationAnnualChart=null;
-
-
 const module3CostCategories=[
   {label:"Staffing / program management",color:"#ea580c",values:[50000,50000,50000,50000,50000,50000,50000,50000,50000,50000,50000,50000,50000,50000,50000,50000,50000,50000,50000,50000,50000]},
   {label:"Maintenance",color:"#84cc16",values:[0,13500,13500,13500,13500,13500,13500,13500,13500,13500,13500,13500,13500,13500,13500,13500,13500,13500,13500,13500,13500]},
@@ -1211,10 +1318,6 @@ const module3PacingScenarios={
 const module3Defaults={pacingScenario:"balanced"};
 let module3Inputs={...module3Defaults};
 
-function cumulativeSeries(values){
-  let total=0;
-  return values.map(value=>{total+=value;return total;});
-}
 
 function costCategoryValuesForPacing(categoryLabel,rolloutYears){
   const years=Array.from({length:21},()=>0);
@@ -1296,63 +1399,7 @@ function updateCostCategoryChart(){
   costCategoryChart=new Chart(chartCanvas,{type:"bar",data,options});
 }
 
-function yearBarRadius(values){
-  return values.map(value=>value>0?6:0);
-}
 
-function implementationAnnualCosts(rolloutYears){
-  const years=Array.from({length:21},()=>0);
-  years.rolloutYears = rolloutYears;
-  const plantingTotal=150000;
-  const yearZeroFarmerEngagement=20000;
-  const yearZeroMRV=12000;
-
-  years[0]+=50000+yearZeroMRV;
-
-  for(let year=1;year<years.length;year++){
-    years[year]+=50000+13500+18000;
-    if(year===3||year===6||year===9||year===12||year===15||year===18) years[year]+=30000;
-  }
-
-  for(let year=0;year<rolloutYears;year++){
-    years[year]+=plantingTotal/rolloutYears;
-    years[year]+=yearZeroFarmerEngagement/rolloutYears;
-  }
-
-  return years;
-}
-
-function module3AnnualRevenue(rolloutYears){
-  const representative=carbonArchetypes.find(a=>a.label==="Shade-grown perennial systems") || carbonArchetypes[1];
-
-  const slowerCurve=[0,0,0.01,0.03,0.07,0.12,0.20,0.32,0.46,0.60,0.72,0.82,0.90,0.96,1,1,1,1,1,1,1];
-
-  const generated=slowerCurve.map(v=>v*80);
-
-  let delay=2;
-  if(rolloutYears===3) delay=4;
-  if(rolloutYears===5) delay=6;
-
-  const verified=shiftTimingSeries(generated,delay);
-
-  return verified.slice(0,21).map(indexValue=>
-    relativeIndexToCredits(indexValue)*module2CPrices.contracted
-  );
-}
-
-function cumulativeCashRequired(costValues){
-  const revenueValues=module3AnnualRevenue(costValues.rolloutYears || 3);
-  let cumulativeNet=0;
-  return costValues.map((cost,year)=>{
-    cumulativeNet += (revenueValues[year] || 0) - cost;
-    return Math.max(0, -cumulativeNet);
-  });
-}
-
-function netAnnualCashFlow(costValues){
-  const revenueValues=module3AnnualRevenue(costValues.rolloutYears || 3);
-  return costValues.map((cost,year)=>(revenueValues[year] || 0) - cost);
-}
 
 function setModule3PacingScenario(scenarioKey){
   if(!module3PacingScenarios[scenarioKey]) return;
@@ -1592,6 +1639,339 @@ function updateCarbonPricing(){
 }
 
 
+
+
+
+/* =========================================================
+   MODULE 4 ONLY: INVESTOR ATTRACTIVENESS
+   ========================================================= */
+let module4FinanceChart=null;
+const module4Defaults={carbonPrice:40};
+let module4Inputs={...module4Defaults};
+
+const module4Scenario={
+  farmers:500,
+  hectaresPerFarmer:2,
+  treesPerHa:100,
+  carbonPerTreeAtMaturity:0.02,
+  plantingCostPerTree:1.5,
+  annualMaintenancePerTree:0.18,
+  annualProgramCostPerFarmer:18,
+  survivalRate:75,
+  verificationDelay:2,
+  projectYears:20
+};
+
+function setModule4Input(key,value){
+  module4Inputs[key]=value;
+  updateModule4FinanceChart();updateModule4GrantSupportChart();
+}
+
+function resetModule4Input(key){
+  module4Inputs[key]=module4Defaults[key];
+  const input=document.getElementById("input-module4-carbon-price");
+  if(input) input.value=module4Inputs.carbonPrice;
+  updateModule4FinanceChart();updateModule4GrantSupportChart();
+}
+
+function module4CashFlows(){
+  const hectares=module4Scenario.farmers*module4Scenario.hectaresPerFarmer;
+  const treesPlanted=hectares*module4Scenario.treesPerHa;
+  const survivingTrees=treesPlanted*(module4Scenario.survivalRate/100);
+
+  const generatedRevenue=Array.from({length:module4Scenario.projectYears+1},(_,year)=>{
+    const growth=growthCurve[Math.min(year,growthCurve.length-1)];
+    const credits=survivingTrees*module4Scenario.carbonPerTreeAtMaturity*growth;
+    return credits*module4Inputs.carbonPrice;
+  });
+
+  return Array.from({length:module4Scenario.projectYears+1},(_,year)=>{
+    const sourceYear=year-module4Scenario.verificationDelay;
+    const revenue=sourceYear>=0?generatedRevenue[sourceYear]:0;
+
+    const plantingCost=year===0?treesPlanted*module4Scenario.plantingCostPerTree:0;
+    const maintenanceCost=year>0?survivingTrees*module4Scenario.annualMaintenancePerTree:0;
+    const programCost=year>0?module4Scenario.farmers*module4Scenario.annualProgramCostPerFarmer:0;
+
+    return revenue-(plantingCost+maintenanceCost+programCost);
+  });
+}
+
+function module4NPV(cashFlows,rate){
+  return cashFlows.reduce((sum,cashFlow,year)=>sum+(cashFlow/Math.pow(1+rate,year)),0);
+}
+
+function module4IRR(cashFlows){
+  const hasNegative=cashFlows.some(v=>v<0);
+  const hasPositive=cashFlows.some(v=>v>0);
+  if(!hasNegative||!hasPositive) return null;
+
+  let low=-0.95;
+  let high=1.0;
+  let lowValue=module4NPV(cashFlows,low);
+  let highValue=module4NPV(cashFlows,high);
+
+  if(lowValue*highValue>0) return null;
+
+  for(let i=0;i<80;i++){
+    const mid=(low+high)/2;
+    const midValue=module4NPV(cashFlows,mid);
+
+    if(Math.abs(midValue)<0.01) return mid;
+
+    if(lowValue*midValue<=0){
+      high=mid;
+      highValue=midValue;
+    }else{
+      low=mid;
+      lowValue=midValue;
+    }
+  }
+
+  return (low+high)/2;
+}
+
+function updateModule4FinanceChart(){
+  const chartCanvas=document.getElementById("module4FinanceChart");
+  if(!chartCanvas) return;
+
+  const priceValue=document.getElementById("val-module4-carbon-price");
+  if(priceValue) priceValue.textContent=`${fmtMoney(module4Inputs.carbonPrice)}/credit`;
+
+  const cashFlows=module4CashFlows();
+  const unleveredIrr=module4IRR(cashFlows);
+  const unleveredPercent=unleveredIrr===null?0:unleveredIrr*100;
+
+  const financingRates=[0,2,4,6,8,10];
+
+  const investorReturns=financingRates.map(rate=>{
+    return unleveredPercent + Math.max(0,(unleveredPercent-rate)*0.35);
+  });
+
+  const statusEl=document.getElementById("module4-status");
+
+  if(statusEl){
+    let cls="negative";
+    let label="Below commercial range";
+    let dot="🔴";
+
+    if(unleveredPercent>=15){
+      cls="positive";
+      label="Commercially attractive";
+      dot="🟢";
+    }else if(unleveredPercent>=8){
+      cls="near";
+      label="Potentially blendable";
+      dot="🟡";
+    }
+
+    statusEl.className=`status ${cls}`;
+    statusEl.innerHTML=`<div class="label">Investor attractiveness</div><div class="status-main">${dot} ${label}</div><p>At ${fmtMoney(module4Inputs.carbonPrice)}/credit, the simplified unlevered project IRR is ${fmtNum(unleveredPercent,1)}%.</p>`;
+  }
+
+  const baseCaseEl=document.getElementById("module4-base-case");
+  const irrEl=document.getElementById("module4-irr");
+
+  if(baseCaseEl) baseCaseEl.textContent=`${fmtMoney(module4Inputs.carbonPrice)}/credit, 20 years`;
+  if(irrEl) irrEl.textContent=`${fmtNum(unleveredPercent,1)}%`;
+
+  document.getElementById("module4-finance-legend").innerHTML=`
+    <span class="legend-item"><span class="legend-line" style="border-color:#2563eb"></span>Estimated investor return</span>
+    <span class="legend-item"><span class="legend-line dashed" style="border-color:#0f172a"></span>Commercial hurdle rate</span>
+  `;
+
+  const data={
+    labels:financingRates.map(rate=>`${rate}%`),
+    datasets:[
+      {
+        type:"line",
+        label:"Estimated investor return",
+        data:investorReturns,
+        borderColor:"#2563eb",
+        backgroundColor:"#2563eb",
+        borderWidth:4,
+        pointRadius:0,
+        tension:.3
+      },
+      {
+        type:"line",
+        label:"Commercial hurdle rate",
+        data:financingRates.map(()=>15),
+        borderColor:"#0f172a",
+        backgroundColor:"#0f172a",
+        borderWidth:3,
+        borderDash:[6,6],
+        pointRadius:0,
+        tension:0
+      }
+    ]
+  };
+
+  const options={
+    responsive:true,
+    maintainAspectRatio:false,
+    plugins:{legend:{display:false}},
+    interaction:{mode:"index",intersect:false},
+    scales:{
+      x:{
+        grid:{color:"#e2e8f0"},
+        title:{display:true,text:"Debt financing rate"}
+      },
+      y:{
+        min:0,
+        max:25,
+        ticks:{callback:(v)=>v+"%"},
+        grid:{color:"#e2e8f0"},
+        title:{display:true,text:"Estimated investor return"}
+      }
+    }
+  };
+
+  if(module4FinanceChart) module4FinanceChart.destroy();
+  module4FinanceChart=new Chart(chartCanvas,{data,options});
+}
+
+
+
+
+
+
+
+
+
+/* =========================================================
+   MODULE 4B ONLY: REAL GRANT SUPPORT REQUIRED
+   Uses Module 4A cash-flow logic and solves for grant share needed
+   to reach the 15% target IRR.
+   ========================================================= */
+let module4GrantSupportChart=null;
+const module4TargetIrr=15;
+
+function module4CashFlowsAtCarbonPrice(carbonPrice){
+  const savedPrice=module4Inputs.carbonPrice;
+  module4Inputs.carbonPrice=carbonPrice;
+  const cashFlows=module4CashFlows();
+  module4Inputs.carbonPrice=savedPrice;
+  return cashFlows;
+}
+
+function module4UpfrontPlantingCost(){
+  const hectares=module4Scenario.farmers*module4Scenario.hectaresPerFarmer;
+  const treesPlanted=hectares*module4Scenario.treesPerHa;
+  return treesPlanted*module4Scenario.plantingCostPerTree;
+}
+
+function module4IrrWithGrantShare(carbonPrice,grantShare){
+  const cashFlows=module4CashFlowsAtCarbonPrice(carbonPrice).slice();
+  const grantAmount=module4UpfrontPlantingCost()*(grantShare/100);
+  cashFlows[0]+=grantAmount;
+  const irr=module4IRR(cashFlows);
+  return irr===null?null:irr*100;
+}
+
+function module4GrantShareRequired(carbonPrice){
+  const baseIrr=module4IrrWithGrantShare(carbonPrice,0);
+  if(baseIrr!==null && baseIrr>=module4TargetIrr) return 0;
+
+  const maxGrantIrr=module4IrrWithGrantShare(carbonPrice,100);
+  if(maxGrantIrr===null || maxGrantIrr<module4TargetIrr) return null;
+
+  let low=0;
+  let high=100;
+
+  for(let i=0;i<50;i++){
+    const mid=(low+high)/2;
+    const midIrr=module4IrrWithGrantShare(carbonPrice,mid);
+
+    if(midIrr===null || midIrr<module4TargetIrr){
+      low=mid;
+    }else{
+      high=mid;
+    }
+  }
+
+  return high;
+}
+
+function updateModule4GrantSupportChart(){
+  const chartCanvas=document.getElementById("module4GrantSupportChart");
+  if(!chartCanvas) return;
+
+  const carbonPrices=[20,30,40,50,60,70,80,90,100,110,120];
+  const grantShares=carbonPrices.map(price=>module4GrantShareRequired(price));
+
+  const currentPrice=module4Inputs.carbonPrice;
+  const currentGrantNeeded=module4GrantShareRequired(currentPrice);
+
+  const priceEl=document.getElementById("module4c-carbon-price");
+  const grantEl=document.getElementById("module4c-grant-needed");
+
+  if(priceEl) priceEl.textContent=`${fmtMoney(currentPrice)}/credit`;
+  if(grantEl){
+    grantEl.textContent=currentGrantNeeded===null
+      ? "Above 100%"
+      : currentGrantNeeded<=0
+        ? "None"
+        : `${fmtNum(currentGrantNeeded)}% of upfront planting cost`;
+  }
+
+  document.getElementById("module4-grant-legend").innerHTML=`
+    <span class="legend-item"><span class="legend-line" style="border-color:#059669"></span>Grant support needed to reach 15% IRR</span>
+  `;
+
+  const data={
+    labels:carbonPrices.map(price=>`$${price}`),
+    datasets:[
+      {
+        type:"line",
+        label:"Grant support needed to reach 15% IRR",
+        data:grantShares,
+        borderColor:"#059669",
+        backgroundColor:"#059669",
+        borderWidth:4,
+        pointRadius:0,
+        tension:.3,
+        spanGaps:true
+      }
+    ]
+  };
+
+  const options={
+    responsive:true,
+    maintainAspectRatio:false,
+    plugins:{
+      legend:{display:false},
+      tooltip:{
+        callbacks:{
+          label:function(context){
+            return context.raw===null
+              ? "Grant needed: above 100% of upfront planting cost"
+              : `Grant needed: ${fmtNum(context.raw)}% of upfront planting cost`;
+          }
+        }
+      }
+    },
+    interaction:{mode:"index",intersect:false},
+    scales:{
+      x:{
+        grid:{color:"#e2e8f0"},
+        title:{display:true,text:"Carbon price"}
+      },
+      y:{
+        min:0,
+        max:100,
+        ticks:{callback:(v)=>v+"%"},
+        grid:{color:"#e2e8f0"},
+        title:{display:true,text:"Grant support needed to reach 15% IRR"}
+      }
+    }
+  };
+
+  if(module4GrantSupportChart) module4GrantSupportChart.destroy();
+  module4GrantSupportChart=new Chart(chartCanvas,{data,options});
+}
+
+
 function initializeStageAccordion(){
   stageIds.forEach(stageId=>{
     const detail = document.getElementById(stageConfig[stageId].detailsId);
@@ -1620,7 +2000,7 @@ function initializeStageAccordion(){
   });
 }
 
-buildStatic();update();buildSensitivityTable();initializeStageAccordion();updateCarbonGeneration();updateCarbonTiming();updateCarbonPricing();updateCostCategoryChart();
+buildStatic();update();buildSensitivityTable();initializeStageAccordion();updateCarbonGeneration();updateCarbonTiming();updateCarbonPricing();updateCostCategoryChart();updateModule4FinanceChart();updateModule4GrantSupportChart();updateModule4GrantSupportChart();updateModule4FinanceChart();updateModule4GrantSupportChart();
 
 </script>
 </body>
