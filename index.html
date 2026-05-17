@@ -148,6 +148,21 @@ li{margin-bottom:8px;line-height:1.6;color:var(--muted)}
   padding:16px;
 }
 .sales-note-card p{font-size:14px;margin:8px 0 0}
+
+.module3-layout{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 340px;
+  gap:20px;
+  align-items:stretch;
+  margin-top:18px;
+}
+.module3-chart-wrap{height:360px}
+.cost-category-list{display:grid;gap:10px;margin-top:14px}
+.cost-category-item{display:flex;justify-content:space-between;gap:12px;padding:10px 12px;border:1px solid var(--line);border-radius:14px;background:#fff}
+.cost-category-item span:first-child{font-weight:750;color:var(--text)}
+.cost-category-item span:last-child{font-weight:800;color:var(--muted);white-space:nowrap}
+@media(max-width:1000px){.module3-layout{grid-template-columns:1fr}}
+
 @media(max-width:1000px){.carbon-sales-layout{grid-template-columns:1fr}}
 
 
@@ -494,13 +509,69 @@ Explore scenarios
 </section>
 
 
-<section id="cost-structure"
- class="module-section">
+<section id="cost-structure" class="module-section">
 <div class="card sensitivity-card">
-<div class="module-kicker">Module 3</div>
-<h2>Cost structure and implementation pacing</h2>
-<p class="module-question">Why are agroforestry projects so capital intensive early on?</p>
-<div class="coming-next">Coming next: a focused view of planting, maintenance, farmer engagement, staffing, MRV, and phased implementation costs.</div>
+<div class="module-kicker">Module 3A</div>
+<h2>Cost categories</h2>
+<p class="note" style="margin-top:8px;">This view breaks project costs into simple operating categories rather than treating cost as one lump sum.</p>
+<p class="module-question">Why are carbon projects operational systems, not just trees?</p>
+
+<div class="module3-layout">
+  <div>
+    <div class="module3-chart-wrap"><canvas id="costCategoryChart"></canvas></div>
+    <div id="cost-category-legend" class="custom-legend"></div>
+    <p class="note" style="margin-top:18px;font-size:15px;line-height:1.55;">
+      Planting creates the largest upfront cost, but the project keeps spending money after seedlings are in the ground. Maintenance, farmer engagement, MRV, and staffing all continue while carbon value builds slowly.
+    </p>
+  </div>
+
+  <div class="sales-note-card">
+    <div class="label">Module 3A lesson</div>
+    <h3 style="margin:8px 0 8px;font-size:18px;">Costs are operating commitments.</h3>
+    <p>A carbon project has to organize planting, support farmers, maintain trees, measure results, and manage the program before revenue fully catches up.</p>
+    <p><strong>Design choice:</strong> costs are simplified into five categories so the operating model stays readable.</p>
+
+    <div class="cost-category-list">
+      <div class="cost-category-item"><span>Planting</span><span>Upfront</span></div>
+      <div class="cost-category-item"><span>Maintenance</span><span>Annual</span></div>
+      <div class="cost-category-item"><span>Farmer engagement</span><span>Annual</span></div>
+      <div class="cost-category-item"><span>MRV</span><span>Periodic</span></div>
+      <div class="cost-category-item"><span>Staffing / program management</span><span>Annual</span></div>
+    </div>
+
+    <div class="coming-next" style="margin-top:18px;">
+      Module 3B below shows how implementation pacing changes the funding pressure.
+    </div>
+  </div>
+</div>
+</div>
+
+<div class="card sensitivity-card" style="margin-top:24px;">
+<div class="module-kicker">Module 3B</div>
+<h2>Implementation pacing</h2>
+<p class="note" style="margin-top:8px;">This view keeps total project cost the same but changes when implementation costs are incurred.</p>
+<p class="module-question">How does rollout speed change the shape of the funding gap?</p>
+
+<div class="module3-layout">
+  <div>
+    <div class="module3-chart-wrap"><canvas id="implementationPacingChart"></canvas></div>
+    <div id="implementation-pacing-legend" class="custom-legend"></div>
+    <p class="note" style="margin-top:18px;font-size:15px;line-height:1.55;">
+      Rapid rollout concentrates costs early. Phased rollout spreads the same total implementation cost over more years. The total commitment is the same, but the early cash pressure is different.
+    </p>
+  </div>
+
+  <div class="sales-note-card">
+    <div class="label">Module 3B lesson</div>
+    <h3 style="margin:8px 0 8px;font-size:18px;">Timing changes financing pressure.</h3>
+    <p>A project can have the same total cost but a very different funding gap depending on whether implementation happens quickly or in phases.</p>
+    <p><strong>Design choice:</strong> this chart isolates cost timing only. It does not yet combine Module 3 costs with carbon revenue.</p>
+
+    <div class="coming-next" style="margin-top:18px;">
+      Later modules can connect implementation pacing to bridge finance, concessional capital, and investor risk.
+    </div>
+  </div>
+</div>
 </div>
 </section>
 
@@ -1106,6 +1177,113 @@ function updateCarbonTiming(){
 
 
 
+
+
+/* =========================================================
+   MODULE 3A AND 3B: COST STRUCTURE AND IMPLEMENTATION PACING
+   ========================================================= */
+let costCategoryChart=null;
+let implementationPacingChart=null;
+
+const module3CostCategories=[
+  {label:"Planting",color:"#059669",values:[150000,0,0,0,0,0,0,0,0,0,0]},
+  {label:"Maintenance",color:"#84cc16",values:[0,13500,13500,13500,13500,13500,13500,13500,13500,13500,13500]},
+  {label:"Farmer engagement",color:"#2563eb",values:[20000,18000,18000,18000,18000,18000,18000,18000,18000,18000,18000]},
+  {label:"MRV",color:"#7c3aed",values:[12000,0,0,30000,0,0,30000,0,0,30000,0]},
+  {label:"Staffing / program management",color:"#ea580c",values:[50000,50000,50000,50000,50000,50000,50000,50000,50000,50000,50000]}
+];
+
+function cumulativeSeries(values){
+  let total=0;
+  return values.map(value=>{total+=value;return total;});
+}
+
+function updateCostCategoryChart(){
+  const chartCanvas=document.getElementById("costCategoryChart");
+  if(!chartCanvas) return;
+
+  const years=Array.from({length:11},(_,year)=>year);
+  document.getElementById("cost-category-legend").innerHTML=module3CostCategories.map(c=>
+    `<span class="legend-item"><span class="legend-swatch" style="background:${c.color}"></span>${c.label}</span>`
+  ).join("");
+
+  const data={
+    labels:years.map(year=>`Year ${year}`),
+    datasets:module3CostCategories.map(c=>({
+      type:"bar",
+      label:c.label,
+      data:c.values,
+      backgroundColor:c.color,
+      borderRadius:yearBarRadius(c.values),
+      stack:"costs"
+    }))
+  };
+
+  const options={
+    responsive:true,
+    maintainAspectRatio:false,
+    interaction:{mode:"index",intersect:false},
+    plugins:{
+      legend:{display:false},
+      tooltip:{callbacks:{label:function(context){return `${context.dataset.label}: ${fmtMoney(context.raw)}`;}}}
+    },
+    scales:{
+      x:{stacked:true,grid:{color:"#e2e8f0"}},
+      y:{stacked:true,beginAtZero:true,ticks:{callback:(v)=>fmtMoney(v)},grid:{color:"#e2e8f0"},title:{display:true,text:"Annual project costs"}}
+    }
+  };
+
+  if(costCategoryChart) costCategoryChart.destroy();
+  costCategoryChart=new Chart(chartCanvas,{data,options});
+}
+
+function yearBarRadius(values){
+  return values.map(value=>value>0?6:0);
+}
+
+function updateImplementationPacingChart(){
+  const chartCanvas=document.getElementById("implementationPacingChart");
+  if(!chartCanvas) return;
+
+  const years=Array.from({length:11},(_,year)=>year);
+  const rapidAnnual=[232000,81500,81500,81500,81500,81500,81500,81500,81500,81500,81500];
+  const phasedAnnual=[92000,101500,131500,111500,111500,81500,81500,81500,81500,81500,81500];
+  const rapidCumulative=cumulativeSeries(rapidAnnual);
+  const phasedCumulative=cumulativeSeries(phasedAnnual);
+
+  document.getElementById("implementation-pacing-legend").innerHTML=`
+    <span class="legend-item"><span class="legend-line" style="border-color:#2563eb"></span>Rapid rollout</span>
+    <span class="legend-item"><span class="legend-line dashed" style="border-color:#0f766e"></span>Phased rollout</span>
+  `;
+
+  const data={
+    labels:years.map(year=>`Year ${year}`),
+    datasets:[
+      {type:"line",label:"Rapid rollout",data:rapidCumulative,borderColor:"#2563eb",backgroundColor:"#2563eb",borderWidth:4,pointRadius:0,tension:.25},
+      {type:"line",label:"Phased rollout",data:phasedCumulative,borderColor:"#0f766e",backgroundColor:"#0f766e",borderWidth:3,borderDash:[10,5],pointRadius:0,tension:.25}
+    ]
+  };
+
+  const options={
+    responsive:true,
+    maintainAspectRatio:false,
+    animation:{duration:350},
+    interaction:{mode:"index",intersect:false},
+    plugins:{
+      legend:{display:false},
+      tooltip:{callbacks:{label:function(context){return `${context.dataset.label}: ${fmtMoney(context.raw)}`;}}}
+    },
+    scales:{
+      x:{grid:{color:"#e2e8f0"}},
+      y:{beginAtZero:true,ticks:{callback:(v)=>fmtMoney(v)},grid:{color:"#e2e8f0"},title:{display:true,text:"Cumulative implementation cost"}}
+    }
+  };
+
+  if(implementationPacingChart) implementationPacingChart.destroy();
+  implementationPacingChart=new Chart(chartCanvas,{data,options});
+}
+
+
 /* Build sensitivity table for carbon price and project length combinations */
 function calculateSurplusFor(price,years){
 const saved={...inputs};
@@ -1270,7 +1448,7 @@ function initializeStageAccordion(){
   });
 }
 
-buildStatic();update();buildSensitivityTable();initializeStageAccordion();updateCarbonGeneration();updateCarbonTiming();updateCarbonPricing();
+buildStatic();update();buildSensitivityTable();initializeStageAccordion();updateCarbonGeneration();updateCarbonTiming();updateCarbonPricing();updateCostCategoryChart();updateImplementationPacingChart();
 
 </script>
 </body>
