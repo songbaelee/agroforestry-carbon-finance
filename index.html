@@ -157,8 +157,9 @@ li{margin-bottom:8px;line-height:1.6;color:var(--muted)}
   margin-top:18px;
 }
 .module3-chart-wrap{height:360px}
-.cost-category-list{display:grid;gap:10px;margin-top:14px}
-.cost-category-item{display:flex;justify-content:space-between;gap:12px;padding:10px 12px;border:1px solid var(--line);border-radius:14px;background:#fff}
+.cost-category-list{display:grid;gap:8px;margin-top:14px}
+.cost-category-item{display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px solid var(--line);background:transparent}
+.cost-category-item:last-child{border-bottom:0}
 .cost-category-item span:first-child{font-weight:750;color:var(--text)}
 .cost-category-item span:last-child{font-weight:800;color:var(--muted);white-space:nowrap}
 @media(max-width:1000px){.module3-layout{grid-template-columns:1fr}}
@@ -532,11 +533,11 @@ Explore scenarios
     <p><strong>Design choice:</strong> costs are simplified into five categories so the operating model stays readable.</p>
 
     <div class="cost-category-list">
-      <div class="cost-category-item"><span>Planting</span><span>Upfront</span></div>
+      <div class="cost-category-item"><span>Staffing / program management</span><span>Annual</span></div>
       <div class="cost-category-item"><span>Maintenance</span><span>Annual</span></div>
+      <div class="cost-category-item"><span>Planting</span><span>Upfront</span></div>
       <div class="cost-category-item"><span>Farmer engagement</span><span>Annual</span></div>
       <div class="cost-category-item"><span>MRV</span><span>Periodic</span></div>
-      <div class="cost-category-item"><span>Staffing / program management</span><span>Annual</span></div>
     </div>
 
     <div class="coming-next" style="margin-top:18px;">
@@ -557,7 +558,7 @@ Explore scenarios
     <div class="module3-chart-wrap"><canvas id="implementationPacingChart"></canvas></div>
     <div id="implementation-pacing-legend" class="custom-legend"></div>
     <p class="note" style="margin-top:18px;font-size:15px;line-height:1.55;">
-      Rapid rollout concentrates costs early. Phased rollout spreads the same total implementation cost over more years. The total commitment is the same, but the early cash pressure is different.
+      Use the slider to spread the same upfront rollout cost over more years. Faster rollout creates a deeper early funding gap. Slower rollout reduces the early dip but stretches implementation timing.
     </p>
   </div>
 
@@ -566,6 +567,20 @@ Explore scenarios
     <h3 style="margin:8px 0 8px;font-size:18px;">Timing changes financing pressure.</h3>
     <p>A project can have the same total cost but a very different funding gap depending on whether implementation happens quickly or in phases.</p>
     <p><strong>Design choice:</strong> this chart isolates cost timing only. It does not yet combine Module 3 costs with carbon revenue.</p>
+
+    <div class="sales-control">
+      <div class="control-head">
+        <div>
+          <div style="font-weight:750;">Rollout pacing</div>
+          <div class="note">Fewer years means faster rollout and deeper early funding pressure.</div>
+        </div>
+        <div class="control-right">
+          <div class="control-value" id="val-module3-rollout-years"></div>
+          <button class="mini-reset" onclick="resetModule3Pacing()">Reset</button>
+        </div>
+      </div>
+      <input id="input-module3-rollout-years" type="range" min="1" max="5" step="1" value="3" oninput="setModule3Pacing(Number(this.value))" />
+    </div>
 
     <div class="coming-next" style="margin-top:18px;">
       Later modules can connect implementation pacing to bridge finance, concessional capital, and investor risk.
@@ -1186,12 +1201,15 @@ let costCategoryChart=null;
 let implementationPacingChart=null;
 
 const module3CostCategories=[
-  {label:"Planting",color:"#059669",values:[150000,0,0,0,0,0,0,0,0,0,0]},
+  {label:"Staffing / program management",color:"#ea580c",values:[50000,50000,50000,50000,50000,50000,50000,50000,50000,50000,50000]},
   {label:"Maintenance",color:"#84cc16",values:[0,13500,13500,13500,13500,13500,13500,13500,13500,13500,13500]},
+  {label:"Planting",color:"#059669",values:[150000,0,0,0,0,0,0,0,0,0,0]},
   {label:"Farmer engagement",color:"#2563eb",values:[20000,18000,18000,18000,18000,18000,18000,18000,18000,18000,18000]},
-  {label:"MRV",color:"#7c3aed",values:[12000,0,0,30000,0,0,30000,0,0,30000,0]},
-  {label:"Staffing / program management",color:"#ea580c",values:[50000,50000,50000,50000,50000,50000,50000,50000,50000,50000,50000]}
+  {label:"MRV",color:"#7c3aed",values:[12000,0,0,30000,0,0,30000,0,0,30000,0]}
 ];
+
+const module3Defaults={rolloutYears:3};
+let module3Inputs={...module3Defaults};
 
 function cumulativeSeries(values){
   let total=0;
@@ -1241,26 +1259,66 @@ function yearBarRadius(values){
   return values.map(value=>value>0?6:0);
 }
 
+function implementationAnnualCosts(rolloutYears){
+  const years=Array.from({length:11},()=>0);
+  const plantingTotal=150000;
+  const yearZeroFarmerEngagement=20000;
+  const yearZeroMRV=12000;
+
+  years[0]+=50000+yearZeroMRV;
+
+  for(let year=1;year<years.length;year++){
+    years[year]+=50000+13500+18000;
+    if(year===3||year===6||year===9) years[year]+=30000;
+  }
+
+  for(let year=0;year<rolloutYears;year++){
+    years[year]+=plantingTotal/rolloutYears;
+    years[year]+=yearZeroFarmerEngagement/rolloutYears;
+  }
+
+  return years;
+}
+
+function fundingPressureSeries(values){
+  let total=0;
+  return values.map(value=>{total-=value;return total;});
+}
+
+function setModule3Pacing(value){
+  module3Inputs.rolloutYears=value;
+  updateImplementationPacingChart();
+}
+
+function resetModule3Pacing(){
+  module3Inputs={...module3Defaults};
+  const input=document.getElementById("input-module3-rollout-years");
+  if(input) input.value=module3Inputs.rolloutYears;
+  updateImplementationPacingChart();
+}
+
 function updateImplementationPacingChart(){
   const chartCanvas=document.getElementById("implementationPacingChart");
   if(!chartCanvas) return;
 
   const years=Array.from({length:11},(_,year)=>year);
-  const rapidAnnual=[232000,81500,81500,81500,81500,81500,81500,81500,81500,81500,81500];
-  const phasedAnnual=[92000,101500,131500,111500,111500,81500,81500,81500,81500,81500,81500];
-  const rapidCumulative=cumulativeSeries(rapidAnnual);
-  const phasedCumulative=cumulativeSeries(phasedAnnual);
+  const selectedAnnual=implementationAnnualCosts(module3Inputs.rolloutYears);
+  const rapidAnnual=implementationAnnualCosts(1);
+  const selectedPressure=fundingPressureSeries(selectedAnnual);
+  const rapidPressure=fundingPressureSeries(rapidAnnual);
+  const rolloutValue=document.getElementById("val-module3-rollout-years");
+  if(rolloutValue) rolloutValue.textContent=`${fmtNum(module3Inputs.rolloutYears)} year${module3Inputs.rolloutYears===1?"":"s"}`;
 
   document.getElementById("implementation-pacing-legend").innerHTML=`
-    <span class="legend-item"><span class="legend-line" style="border-color:#2563eb"></span>Rapid rollout</span>
-    <span class="legend-item"><span class="legend-line dashed" style="border-color:#0f766e"></span>Phased rollout</span>
+    <span class="legend-item"><span class="legend-line" style="border-color:#2563eb"></span>Selected rollout: ${module3Inputs.rolloutYears} year${module3Inputs.rolloutYears===1?"":"s"}</span>
+    <span class="legend-item"><span class="legend-line dashed" style="border-color:#0f766e"></span>Rapid rollout reference: 1 year</span>
   `;
 
   const data={
     labels:years.map(year=>`Year ${year}`),
     datasets:[
-      {type:"line",label:"Rapid rollout",data:rapidCumulative,borderColor:"#2563eb",backgroundColor:"#2563eb",borderWidth:4,pointRadius:0,tension:.25},
-      {type:"line",label:"Phased rollout",data:phasedCumulative,borderColor:"#0f766e",backgroundColor:"#0f766e",borderWidth:3,borderDash:[10,5],pointRadius:0,tension:.25}
+      {type:"line",label:`Selected rollout: ${module3Inputs.rolloutYears} year${module3Inputs.rolloutYears===1?"":"s"}`,data:selectedPressure,borderColor:"#2563eb",backgroundColor:"#2563eb",borderWidth:4,pointRadius:0,tension:.25},
+      {type:"line",label:"Rapid rollout reference",data:rapidPressure,borderColor:"#0f766e",backgroundColor:"#0f766e",borderWidth:3,borderDash:[10,5],pointRadius:0,tension:.25}
     ]
   };
 
@@ -1275,7 +1333,7 @@ function updateImplementationPacingChart(){
     },
     scales:{
       x:{grid:{color:"#e2e8f0"}},
-      y:{beginAtZero:true,ticks:{callback:(v)=>fmtMoney(v)},grid:{color:"#e2e8f0"},title:{display:true,text:"Cumulative implementation cost"}}
+      y:{beginAtZero:true,ticks:{callback:(v)=>fmtMoney(v)},grid:{color:"#e2e8f0"},title:{display:true,text:"Cumulative funding pressure"}}
     }
   };
 
