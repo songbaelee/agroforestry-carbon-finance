@@ -526,70 +526,29 @@ Explore scenarios
 <div class="card sensitivity-card">
 <div class="module-kicker">Module 3A</div>
 <h2>Cost categories</h2>
-<p class="note" style="margin-top:8px;">This view breaks project costs into simple operating categories rather than treating cost as one lump sum.</p>
-<p class="module-question">Why are carbon projects operational systems, not just trees?</p>
+<p class="note" style="margin-top:8px;">This view breaks project costs into categories and shows how rollout pacing changes when those costs occur.</p>
+<p class="module-question">How do project costs change when rollout speed changes?</p>
 
 <div class="module3-layout">
   <div>
     <div class="module3-chart-wrap"><canvas id="costCategoryChart"></canvas></div>
     <div id="cost-category-legend" class="custom-legend"></div>
     <p class="note" style="margin-top:18px;font-size:15px;line-height:1.55;">
-      Planting creates the largest upfront cost, but the project keeps spending money after seedlings are in the ground. Maintenance, farmer engagement, MRV, and staffing all continue while carbon value builds slowly.
+      Rapid rollout concentrates planting and engagement costs early. Balanced and phased rollouts spread those costs across more years while staffing, maintenance, and MRV continue over time.
     </p>
   </div>
 
   <div class="sales-note-card">
     <div class="label">Module 3A lesson</div>
     <h3 style="margin:8px 0 8px;font-size:18px;">Costs are operating commitments.</h3>
-    <p>A carbon project has to organize planting, support farmers, maintain trees, measure results, and manage the program before revenue fully catches up.</p>
+    <p>A carbon project has to organize planting, support farmers, maintain trees, measure results, and manage the program. Rollout speed changes when those costs hit.</p>
     <p><strong>Design choice:</strong> costs are simplified into five categories so the operating model stays readable.</p>
 
-    <div class="cost-category-list">
-      <div class="cost-category-item"><span>Staffing / program management</span><span>Annual</span></div>
-      <div class="cost-category-item"><span>Maintenance</span><span>Annual</span></div>
-      <div class="cost-category-item"><span>Planting</span><span>Upfront</span></div>
-      <div class="cost-category-item"><span>Farmer engagement</span><span>Annual</span></div>
-      <div class="cost-category-item"><span>MRV</span><span>Periodic</span></div>
-    </div>
-
-    <div class="coming-next" style="margin-top:18px;">
-      Module 3B below shows how implementation pacing changes the funding pressure.
-    </div>
-  </div>
-</div>
-</div>
-
-<div class="card sensitivity-card" style="margin-top:24px;">
-<div class="module-kicker">Module 3B</div>
-<h2>Implementation pacing</h2>
-<p class="note" style="margin-top:8px;">This view keeps total implementation cost the same and changes only when the project spends the money.</p>
-<p class="module-question">How does rollout speed change upfront financing pressure?</p>
-
-<div class="module3-layout">
-  <div>
-    <h3 style="margin:0 0 10px;font-size:16px;">Step 1: when does the project spend money?</h3>
-    <div class="module3-chart-wrap module3-short-chart"><canvas id="implementationAnnualChart"></canvas></div>
-    <div id="implementation-annual-legend" class="custom-legend"></div>
-
-    <h3 style="margin:26px 0 10px;font-size:16px;">Step 2: how much cash must be funded over time?</h3>
-    <div class="module3-chart-wrap module3-short-chart"><canvas id="implementationFundingChart"></canvas></div>
-    <div id="implementation-pacing-legend" class="custom-legend"></div>
-    <p class="note" style="margin-top:18px;font-size:15px;line-height:1.55;">
-      The first chart shows the operational choice: spend quickly or spread implementation out. The second chart translates that choice into cumulative cash required. The total cost is the same, but the timing of the funding need changes.
-    </p>
-  </div>
-
-  <div class="sales-note-card">
-    <div class="label">Module 3B lesson</div>
-    <h3 style="margin:8px 0 8px;font-size:18px;">Timing changes financing pressure.</h3>
-    <p>A project can have the same total cost but a very different funding gap depending on whether implementation happens quickly or in phases.</p>
-    <p><strong>Design choice:</strong> this chart isolates cost timing only. It does not yet combine Module 3 costs with carbon revenue.</p>
-
-    <div class="sales-control">
+<div class="sales-control">
       <div class="control-head">
         <div>
           <div style="font-weight:750;">Choose the rollout scenario</div>
-          <div class="note">Each option has the same total implementation cost. Only the timing changes.</div>
+          <div class="note">Rapid concentrates costs early. Phased spreads implementation costs over more years.</div>
         </div>
         <div class="control-right">
           <button class="mini-reset" onclick="resetModule3Pacing()">Reset</button>
@@ -604,16 +563,25 @@ Explore scenarios
 
     <div class="pacing-metric-grid">
       <div class="pacing-metric"><span>Selected pace</span><span id="module3-pacing-name"></span></div>
-      <div class="pacing-metric"><span>Year 0 cash need</span><span id="module3-year0-need"></span></div>
-      <div class="pacing-metric"><span>Total cost by Year 10</span><span id="module3-total-cost"></span></div>
+      <div class="pacing-metric"><span>Implementation period</span><span id="module3-total-cost"></span></div>
+    </div>
+
+    
+    <div class="cost-category-list">
+      <div class="cost-category-item"><span>Staffing / program management</span><span>Annual</span></div>
+      <div class="cost-category-item"><span>Maintenance</span><span>Annual</span></div>
+      <div class="cost-category-item"><span>Planting</span><span>Upfront</span></div>
+      <div class="cost-category-item"><span>Farmer engagement</span><span>Annual</span></div>
+      <div class="cost-category-item"><span>MRV</span><span>Periodic</span></div>
     </div>
 
     <div class="coming-next" style="margin-top:18px;">
-      Later modules can connect implementation pacing to bridge finance, concessional capital, and investor risk.
+      Module 4 can now pick up the financing question: who funds the gap before carbon revenue catches up?
     </div>
   </div>
 </div>
 </div>
+
 </section>
 
 <section id="financing" class="module-section">
@@ -921,7 +889,7 @@ const chartYears=Array.from({length:21},(_,year)=>year);
 function padToTwenty(values){return chartYears.map((_,i)=>i<values.length?values[i]:null)}
 const cumulativeData=m.rows.map(r=>r.cumulative);
 const minPointData=m.rows.map(r=>r.year===m.minRow.year?m.minRow.cumulative:null);
-const datasets=[{type:"bar",label:(activeStage==="1C"||activeStage==="1D")?"Annual carbon revenue received":"Annual carbon revenue",data:padToTwenty(m.rows.map(r=>r.revenue)),backgroundColor:"#059669",borderRadius:{topLeft:8,topRight:8}},{type:"bar",label:"Annual project costs",data:padToTwenty(m.rows.map(r=>r.costOutflow)),backgroundColor:"#ea580c",borderRadius:{bottomLeft:8,bottomRight:8}}];
+const datasets=[{type:"line",label:(activeStage==="1C"||activeStage==="1D")?"Annual carbon revenue received":"Annual carbon revenue",data:padToTwenty(m.rows.map(r=>r.revenue)),backgroundColor:"#059669",borderRadius:{topLeft:8,topRight:8}},{type:"line",label:"Annual project costs",data:padToTwenty(m.rows.map(r=>r.costOutflow)),backgroundColor:"#ea580c",borderRadius:{bottomLeft:8,bottomRight:8}}];
 if(stage.showFundingGap){datasets.push({type:"line",label:"Below break-even area",data:padToTwenty(cumulativeData.map(v=>v<0?v:0)),fill:{target:{value:0}},borderColor:"rgba(234,88,12,0)",backgroundColor:"rgba(234,88,12,0.08)",pointRadius:0,tension:.3,spanGaps:true,order:10});}
 datasets.push({type:"line",label:"Cumulative cash position",data:padToTwenty(stage.showDelay?m.baselineRows.map(r=>r.cumulative):cumulativeData),borderColor:"#2563eb",backgroundColor:"#2563eb",borderWidth:4,pointRadius:0,tension:.3,pointStyle:"line",order:0});
 if(stage.showDelay){
@@ -931,7 +899,7 @@ label:"With payment delay",
 data:padToTwenty(cumulativeData),
 borderColor:"#0f766e",
 backgroundColor:"#0f766e",
-borderWidth:3,
+borderWidth:4,tension:.35,fill:false,pointRadius:0,
 borderDash:[12,6],
 pointRadius:0,
 tension:.3,
@@ -940,7 +908,7 @@ order:1
 });
 }
 
-if(stage.showFinancing){datasets.push({type:"line",label:"With financing cost",data:padToTwenty(m.financingRows.map(r=>r.cumulativeAfterFinancing)),borderColor:"#0f172a",backgroundColor:"#0f172a",borderWidth:3,borderDash:[2,6],pointRadius:4,pointHoverRadius:6,pointStyle:"rectRot",order:2});}
+if(stage.showFinancing){datasets.push({type:"line",label:"With financing cost",data:padToTwenty(m.financingRows.map(r=>r.cumulativeAfterFinancing)),borderColor:"#0f172a",backgroundColor:"#0f172a",borderWidth:4,tension:.35,fill:false,pointRadius:0,borderDash:[2,6],pointRadius:4,pointHoverRadius:6,pointStyle:"rectRot",order:2});}
 if(stage.showFundingGap){datasets.push({type:"line",label:"Maximum funding gap",data:padToTwenty(minPointData),borderColor:"#0f172a",backgroundColor:"#0f172a",borderWidth:0,pointRadius:7,pointHoverRadius:9,showLine:false,spanGaps:false,order:-1});}
 const data={labels:chartYears.map(year=>`Year ${year}`),datasets};
 const options={responsive:true,maintainAspectRatio:false,interaction:{mode:"index",intersect:false},plugins:{legend:{display:false}},layout:{padding:{top:0,bottom:0}},scales:{x:{grid:{color:"#e2e8f0"}},y:{min:-500000,max:500000,ticks:{callback:(v)=>fmtMoney(v)},grid:{color:"#e2e8f0"}}}};
@@ -1057,7 +1025,7 @@ function updateCarbonGeneration(){
           data:baseline,
           borderColor:a.color,
           backgroundColor:a.color,
-          borderWidth:3,
+          borderWidth:4,tension:.35,fill:false,pointRadius:0,
           pointRadius:0,
           tension:.35,
           order:0
@@ -1225,14 +1193,14 @@ function updateCarbonTiming(){
    ========================================================= */
 let costCategoryChart=null;
 let implementationAnnualChart=null;
-let implementationFundingChart=null;
+
 
 const module3CostCategories=[
-  {label:"Staffing / program management",color:"#ea580c",values:[50000,50000,50000,50000,50000,50000,50000,50000,50000,50000,50000]},
-  {label:"Maintenance",color:"#84cc16",values:[0,13500,13500,13500,13500,13500,13500,13500,13500,13500,13500]},
-  {label:"Planting",color:"#059669",values:[150000,0,0,0,0,0,0,0,0,0,0]},
-  {label:"Farmer engagement",color:"#7c3aed",values:[20000,18000,18000,18000,18000,18000,18000,18000,18000,18000,18000]},
-  {label:"MRV",color:"#334155",values:[12000,0,0,30000,0,0,30000,0,0,30000,0]}
+  {label:"Staffing / program management",color:"#ea580c",values:[50000,50000,50000,50000,50000,50000,50000,50000,50000,50000,50000,50000,50000,50000,50000,50000,50000,50000,50000,50000,50000]},
+  {label:"Maintenance",color:"#84cc16",values:[0,13500,13500,13500,13500,13500,13500,13500,13500,13500,13500,13500,13500,13500,13500,13500,13500,13500,13500,13500,13500]},
+  {label:"Planting",color:"#059669",values:[150000,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},
+  {label:"Farmer engagement",color:"#7c3aed",values:[20000,18000,18000,18000,18000,18000,18000,18000,18000,18000,18000,18000,18000,18000,18000,18000,18000,18000,18000,18000,18000]},
+  {label:"MRV",color:"#334155",values:[12000,0,0,30000,0,0,30000,0,0,30000,0,0,30000,0,0,30000,0,0,30000,0,0]}
 ];
 
 const module3PacingScenarios={
@@ -1248,11 +1216,51 @@ function cumulativeSeries(values){
   return values.map(value=>{total+=value;return total;});
 }
 
+function costCategoryValuesForPacing(categoryLabel,rolloutYears){
+  const years=Array.from({length:21},()=>0);
+  if(categoryLabel==="Staffing / program management"){
+    return years.map(()=>50000);
+  }
+  if(categoryLabel==="Maintenance"){
+    return years.map((_,year)=>{
+      if(year===0) return 0;
+      const rampShare=Math.min(1,Math.max(0,year)/rolloutYears);
+      return 13500*rampShare;
+    });
+  }
+  if(categoryLabel==="Planting"){
+    return years.map((_,year)=>year<rolloutYears?150000/rolloutYears:0);
+  }
+  if(categoryLabel==="Farmer engagement"){
+    return years.map((_,year)=>{
+      const rolloutSupport=year<rolloutYears?20000/rolloutYears:0;
+      const ongoing=year>0?18000:0;
+      return rolloutSupport+ongoing;
+    });
+  }
+  if(categoryLabel==="MRV"){
+    return years.map((_,year)=>year===0?12000:((year===3||year===6||year===9||year===12||year===15||year===18)?30000:0));
+  }
+  return years;
+}
+
 function updateCostCategoryChart(){
   const chartCanvas=document.getElementById("costCategoryChart");
   if(!chartCanvas) return;
 
-  const years=Array.from({length:11},(_,year)=>year);
+  const years=Array.from({length:21},(_,year)=>year);
+  const scenario=module3PacingScenarios[module3Inputs.pacingScenario] || module3PacingScenarios.balanced;
+
+  Object.keys(module3PacingScenarios).forEach(key=>{
+    const button=document.getElementById(`pacing-choice-${key}`);
+    if(button) button.classList.toggle("active",key===module3Inputs.pacingScenario);
+  });
+
+  const nameEl=document.getElementById("module3-pacing-name");
+  const totalEl=document.getElementById("module3-total-cost");
+  if(nameEl) nameEl.textContent=`${scenario.label} (${scenario.years} year${scenario.years===1?"":"s"})`;
+  if(totalEl) totalEl.textContent=`${scenario.years} years`;
+
   document.getElementById("cost-category-legend").innerHTML=module3CostCategories.map(c=>
     `<span class="legend-item"><span class="legend-swatch" style="background:${c.color}"></span>${c.label}</span>`
   ).join("");
@@ -1262,9 +1270,9 @@ function updateCostCategoryChart(){
     datasets:module3CostCategories.map(c=>({
       type:"bar",
       label:c.label,
-      data:c.values,
+      data:costCategoryValuesForPacing(c.label,scenario.years),
       backgroundColor:c.color,
-      borderRadius:yearBarRadius(c.values),
+      borderRadius:4,
       stack:"costs"
     }))
   };
@@ -1272,6 +1280,7 @@ function updateCostCategoryChart(){
   const options={
     responsive:true,
     maintainAspectRatio:false,
+    animation:{duration:350},
     interaction:{mode:"index",intersect:false},
     plugins:{
       legend:{display:false},
@@ -1284,7 +1293,7 @@ function updateCostCategoryChart(){
   };
 
   if(costCategoryChart) costCategoryChart.destroy();
-  costCategoryChart=new Chart(chartCanvas,{data,options});
+  costCategoryChart=new Chart(chartCanvas,{type:"bar",data,options});
 }
 
 function yearBarRadius(values){
@@ -1292,7 +1301,8 @@ function yearBarRadius(values){
 }
 
 function implementationAnnualCosts(rolloutYears){
-  const years=Array.from({length:11},()=>0);
+  const years=Array.from({length:21},()=>0);
+  years.rolloutYears = rolloutYears;
   const plantingTotal=150000;
   const yearZeroFarmerEngagement=20000;
   const yearZeroMRV=12000;
@@ -1301,7 +1311,7 @@ function implementationAnnualCosts(rolloutYears){
 
   for(let year=1;year<years.length;year++){
     years[year]+=50000+13500+18000;
-    if(year===3||year===6||year===9) years[year]+=30000;
+    if(year===3||year===6||year===9||year===12||year===15||year===18) years[year]+=30000;
   }
 
   for(let year=0;year<rolloutYears;year++){
@@ -1312,26 +1322,53 @@ function implementationAnnualCosts(rolloutYears){
   return years;
 }
 
-function cumulativeCashRequired(values){
-  let total=0;
-  return values.map(value=>{total+=value;return total;});
+function module3AnnualRevenue(rolloutYears){
+  const representative=carbonArchetypes.find(a=>a.label==="Shade-grown perennial systems") || carbonArchetypes[1];
+
+  const slowerCurve=[0,0,0.01,0.03,0.07,0.12,0.20,0.32,0.46,0.60,0.72,0.82,0.90,0.96,1,1,1,1,1,1,1];
+
+  const generated=slowerCurve.map(v=>v*80);
+
+  let delay=2;
+  if(rolloutYears===3) delay=4;
+  if(rolloutYears===5) delay=6;
+
+  const verified=shiftTimingSeries(generated,delay);
+
+  return verified.slice(0,21).map(indexValue=>
+    relativeIndexToCredits(indexValue)*module2CPrices.contracted
+  );
+}
+
+function cumulativeCashRequired(costValues){
+  const revenueValues=module3AnnualRevenue(costValues.rolloutYears || 3);
+  let cumulativeNet=0;
+  return costValues.map((cost,year)=>{
+    cumulativeNet += (revenueValues[year] || 0) - cost;
+    return Math.max(0, -cumulativeNet);
+  });
+}
+
+function netAnnualCashFlow(costValues){
+  const revenueValues=module3AnnualRevenue(costValues.rolloutYears || 3);
+  return costValues.map((cost,year)=>(revenueValues[year] || 0) - cost);
 }
 
 function setModule3PacingScenario(scenarioKey){
   if(!module3PacingScenarios[scenarioKey]) return;
   module3Inputs.pacingScenario=scenarioKey;
-  updateImplementationPacingChart();
+  updateCostCategoryChart();
 }
 
 function setModule3Pacing(value){
   const matched=Object.entries(module3PacingScenarios).find(([,scenario])=>scenario.years===value);
   module3Inputs.pacingScenario=matched?matched[0]:"balanced";
-  updateImplementationPacingChart();
+  updateCostCategoryChart();
 }
 
 function resetModule3Pacing(){
   module3Inputs={...module3Defaults};
-  updateImplementationPacingChart();
+  updateCostCategoryChart();
 }
 
 function updateImplementationPacingChart(){
@@ -1339,12 +1376,12 @@ function updateImplementationPacingChart(){
   const fundingCanvas=document.getElementById("implementationFundingChart");
   if(!annualCanvas || !fundingCanvas) return;
 
-  const years=Array.from({length:11},(_,year)=>year);
+  const years=Array.from({length:21},(_,year)=>year);
   const scenario=module3PacingScenarios[module3Inputs.pacingScenario] || module3PacingScenarios.balanced;
   const selectedAnnual=implementationAnnualCosts(scenario.years);
-  const selectedCumulative=cumulativeCashRequired(selectedAnnual);
-  const year0Need=selectedAnnual[0];
-  const totalCost=selectedCumulative[selectedCumulative.length-1];
+  const selectedNetAnnual=netAnnualCashFlow(selectedAnnual);
+  const year0Need=selectedNetAnnual[0];
+  const peakCashRequired=Math.min(...selectedNetAnnual);
 
   Object.keys(module3PacingScenarios).forEach(key=>{
     const button=document.getElementById(`pacing-choice-${key}`);
@@ -1356,64 +1393,66 @@ function updateImplementationPacingChart(){
   const totalEl=document.getElementById("module3-total-cost");
   if(nameEl) nameEl.textContent=`${scenario.label} (${scenario.years} year${scenario.years===1?"":"s"})`;
   if(year0El) year0El.textContent=fmtMoney(year0Need);
-  if(totalEl) totalEl.textContent=fmtMoney(totalCost);
+  if(totalEl) totalEl.textContent=`${scenario.years} years`;
 
   document.getElementById("implementation-annual-legend").innerHTML=`
     <span class="legend-item"><span class="legend-swatch" style="background:${scenario.color}"></span>${scenario.label}: annual spending</span>
   `;
 
-  document.getElementById("implementation-pacing-legend").innerHTML=`
-    <span class="legend-item"><span class="legend-line" style="border-color:${scenario.color}"></span>${scenario.label}: cumulative cash required</span>
-  `;
+  document.getElementById("implementation-pacing-legend").innerHTML=Object.entries(module3PacingScenarios).map(([key,pacing])=>{
+    const isSelected=key===module3Inputs.pacingScenario;
+    return `<span class="legend-item"><span class="legend-swatch" style="background:${isSelected?pacing.color:"#cbd5e1"}"></span>${pacing.label}${isSelected?" selected":""}</span>`;
+  }).join("");
 
   const annualData={
     labels:years.map(year=>`Year ${year}`),
     datasets:[
-      {type:"bar",label:`${scenario.label}: annual spending`,data:selectedAnnual,backgroundColor:scenario.color,borderRadius:6}
+      {
+        type:"bar",
+        label:"Staffing / program management",
+        data:selectedAnnual.map((v,i)=>Math.min(v,50000)),
+        backgroundColor:"#ea580c",
+        stack:"costs"
+      },
+      {
+        type:"bar",
+        label:"Maintenance",
+        data:selectedAnnual.map((v,i)=>i>0?13500:0),
+        backgroundColor:"#84cc16",
+        stack:"costs"
+      },
+      {
+        type:"bar",
+        label:"Planting",
+        data:selectedAnnual.map((v,i)=>{
+          if(i>=scenario.years) return 0;
+          return 150000/scenario.years;
+        }),
+        backgroundColor:"#059669",
+        stack:"costs"
+      },
+      {
+        type:"bar",
+        label:"Farmer engagement",
+        data:selectedAnnual.map((v,i)=>{
+          if(i>=scenario.years) return i>0?18000:0;
+          return (20000/scenario.years)+(i>0?18000:0);
+        }),
+        backgroundColor:"#7c3aed",
+        stack:"costs"
+      },
+      {
+        type:"bar",
+        label:"MRV",
+        data:selectedAnnual.map((v,i)=>{
+          if(i===0) return 12000;
+          return (i===3||i===6||i===9||i===12||i===15||i===18)?30000:0;
+        }),
+        backgroundColor:"#334155",
+        stack:"costs"
+      }
     ]
   };
-
-  const fundingData={
-    labels:years.map(year=>`Year ${year}`),
-    datasets:[
-      {type:"line",label:`${scenario.label}: cumulative cash required`,data:selectedCumulative,borderColor:scenario.color,backgroundColor:scenario.color,borderWidth:4,pointRadius:0,tension:.2}
-    ]
-  };
-
-  const sharedPlugins={
-    legend:{display:false},
-    tooltip:{callbacks:{label:function(context){return `${context.dataset.label}: ${fmtMoney(context.raw)}`;}}}
-  };
-
-  const annualOptions={
-    responsive:true,
-    maintainAspectRatio:false,
-    animation:{duration:350},
-    interaction:{mode:"index",intersect:false},
-    plugins:sharedPlugins,
-    scales:{
-      x:{grid:{color:"#e2e8f0"}},
-      y:{beginAtZero:true,ticks:{callback:(v)=>fmtMoney(v)},grid:{color:"#e2e8f0"},title:{display:true,text:"Annual cost outflow"}}
-    }
-  };
-
-  const fundingOptions={
-    responsive:true,
-    maintainAspectRatio:false,
-    animation:{duration:350},
-    interaction:{mode:"index",intersect:false},
-    plugins:sharedPlugins,
-    scales:{
-      x:{grid:{color:"#e2e8f0"}},
-      y:{beginAtZero:true,ticks:{callback:(v)=>fmtMoney(v)},grid:{color:"#e2e8f0"},title:{display:true,text:"Cumulative cash required"}}
-    }
-  };
-
-  if(implementationAnnualChart) implementationAnnualChart.destroy();
-  implementationAnnualChart=new Chart(annualCanvas,{data:annualData,options:annualOptions});
-
-  if(implementationFundingChart) implementationFundingChart.destroy();
-  implementationFundingChart=new Chart(fundingCanvas,{data:fundingData,options:fundingOptions});
 }
 
 
@@ -1581,7 +1620,7 @@ function initializeStageAccordion(){
   });
 }
 
-buildStatic();update();buildSensitivityTable();initializeStageAccordion();updateCarbonGeneration();updateCarbonTiming();updateCarbonPricing();updateCostCategoryChart();updateImplementationPacingChart();
+buildStatic();update();buildSensitivityTable();initializeStageAccordion();updateCarbonGeneration();updateCarbonTiming();updateCarbonPricing();updateCostCategoryChart();
 
 </script>
 </body>
