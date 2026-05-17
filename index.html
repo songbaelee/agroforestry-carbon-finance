@@ -247,7 +247,7 @@ details[open] > summary::before{
 <p>Carbon finance is complicated. Start by thinking in terms of variables, beginning with two: carbon price and time.</p>
 
 <p style="font-size:13px;color:#94a3b8;margin-top:10px;">
-Stage 1A with Stage 1B, 1C, and 1D reveals • Version 0.6 • May 2026
+Modules 1–6 • Version 0.7 • May 2026
 </p>
 
 <div style="margin-top:20px;">
@@ -649,6 +649,8 @@ Explore scenarios
 
     <p><strong>Design choice:</strong> instead of adding a full capital stack, Module 4 isolates one intuition: concessional financing can increase investor attractiveness.</p>
 
+    <p><strong>Simplified takeaway:</strong> in this model, carbon revenue alone may still struggle to generate commercial-style returns.</p>
+
     <div class="sales-control">
       <div class="control-head">
         <div>
@@ -723,7 +725,7 @@ Explore scenarios
     <div class="module5-chart-wrap"><canvas id="module5BenefitChart"></canvas></div>
     <div id="module5-benefit-legend" class="custom-legend"></div>
     <p class="note" style="margin-top:18px;font-size:15px;line-height:1.55;">
-      The stacked bar shows a simplified allocation of annual carbon revenue at the current Module 4 carbon price. Higher farmer share increases farmer benefit, but leaves less revenue available for investor returns and project recovery.
+      The stacked bar shows a simplified allocation of annual carbon revenue at the current Module 4 carbon price. Higher farmer share increases farmer benefit, but leaves less revenue available for project recovery and investor returns.
     </p>
   </div>
 
@@ -731,6 +733,7 @@ Explore scenarios
     <div class="label">Module 5 lesson</div>
     <h3 style="margin:8px 0 8px;font-size:18px;">Value sharing creates tradeoffs.</h3>
     <p>Carbon revenue can support farmers, project operations, and investor recovery, but the same dollar cannot fully serve every goal at once.</p>
+    <p><strong>Design choice:</strong> the grant metric shows support needed to preserve a 15% investor IRR after farmer sharing.</p>
 
     <div class="sales-control">
       <div class="control-head">
@@ -750,7 +753,7 @@ Explore scenarios
       <div class="pacing-metric"><span>Carbon price</span><span id="module5-carbon-price"></span></div>
       <div class="pacing-metric"><span>Farmer annual value at maturity</span><span id="module5-farmer-value"></span></div>
       <div class="pacing-metric"><span>Investor IRR after farmer share</span><span id="module5-investor-irr"></span></div>
-      <div class="pacing-metric"><span>Grant support needed</span><span id="module5-grant-needed"></span></div>
+      <div class="pacing-metric"><span>Grant support needed to maintain 15% IRR</span><span id="module5-grant-needed"></span></div>
     </div>
   </div>
 </div>
@@ -765,9 +768,9 @@ Explore scenarios
 <p class="module-question">Can the project simultaneously achieve climate, farmer income, and commercial finance goals?</p>
 
 <div class="module6-scorecard" id="module6-scorecard">
-  <div class="module6-score"><div class="label">Climate impact</div><div class="value" id="module6-climate"></div><div class="note">Based on simplified long-run carbon generation.</div></div>
+  <div class="module6-score"><div class="label">Climate impact (simplified proxy)</div><div class="value" id="module6-climate"></div><div class="note">Fixed high in this version, based on the simplified project scale.</div></div>
   <div class="module6-score"><div class="label">Farmer benefit</div><div class="value" id="module6-farmer"></div><div class="note">Based on current farmer revenue share.</div></div>
-  <div class="module6-score"><div class="label">Investor attractiveness</div><div class="value" id="module6-investor"></div><div class="note">Based on IRR after farmer share.</div></div>
+  <div class="module6-score"><div class="label">Investor attractiveness</div><div class="value" id="module6-investor"></div><div class="note">Based on IRR after farmer share; high requires at least 15%.</div></div>
   <div class="module6-score"><div class="label">Subsidy dependence</div><div class="value" id="module6-subsidy"></div><div class="note">Based on grant support needed for 15% IRR.</div></div>
 </div>
 
@@ -2229,6 +2232,7 @@ function updateModule6Scorecard(){
   const investorIrr=module5IrrAfterFarmerShare(module4Inputs.carbonPrice,farmerShare);
   const grantNeeded=module5GrantShareRequired(module4Inputs.carbonPrice,farmerShare);
 
+  // Module 6 keeps climate impact fixed for now so this view stays a passive scorecard, not another model.
   const climateLevel="High";
   const farmerLevel=module6Level(farmerShare,{medium:15,high:35});
   const investorLevel=module6Level(investorIrr,{medium:8,high:15});
@@ -2248,7 +2252,7 @@ function updateModule6Scorecard(){
   if(subsidyEl) subsidyEl.textContent=subsidyLevel;
 
   if(summaryEl){
-    summaryEl.textContent=`Current settings: ${fmtMoney(module4Inputs.carbonPrice)}/credit carbon price and ${fmtNum(farmerShare)}% farmer share. The simplified system view shows farmer benefit as ${farmerLevel.toLowerCase()}, investor attractiveness as ${investorLevel.toLowerCase()}, and subsidy dependence as ${subsidyLevel.toLowerCase()}.`;
+    summaryEl.textContent=`Current settings: ${fmtMoney(module4Inputs.carbonPrice)}/credit carbon price and ${fmtNum(farmerShare)}% farmer share. Climate impact is held high in this simplified version. Farmer benefit is ${farmerLevel.toLowerCase()}, investor attractiveness is ${investorLevel.toLowerCase()}, and subsidy dependence is ${subsidyLevel.toLowerCase()}.`;
   }
 }
 
