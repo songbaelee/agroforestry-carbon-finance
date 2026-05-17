@@ -157,6 +157,7 @@ li{margin-bottom:8px;line-height:1.6;color:var(--muted)}
   margin-top:18px;
 }
 .module3-chart-wrap{height:360px}
+.module3-short-chart{height:260px}
 .cost-category-list{display:grid;gap:8px;margin-top:14px}
 .cost-category-item{display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px solid var(--line);background:transparent}
 .cost-category-item:last-child{border-bottom:0}
@@ -555,10 +556,15 @@ Explore scenarios
 
 <div class="module3-layout">
   <div>
-    <div class="module3-chart-wrap"><canvas id="implementationPacingChart"></canvas></div>
+    <h3 style="margin:0 0 10px;font-size:16px;">Annual implementation spending</h3>
+    <div class="module3-chart-wrap module3-short-chart"><canvas id="implementationAnnualChart"></canvas></div>
+    <div id="implementation-annual-legend" class="custom-legend"></div>
+
+    <h3 style="margin:26px 0 10px;font-size:16px;">Cumulative funding pressure</h3>
+    <div class="module3-chart-wrap module3-short-chart"><canvas id="implementationFundingChart"></canvas></div>
     <div id="implementation-pacing-legend" class="custom-legend"></div>
     <p class="note" style="margin-top:18px;font-size:15px;line-height:1.55;">
-      Use the slider to spread the same upfront rollout cost over more years. Faster rollout creates a deeper early funding gap. Slower rollout reduces the early dip but stretches implementation timing.
+      The first chart shows what changed: cost timing. The second chart shows the consequence: faster rollout creates a deeper early funding gap, while slower rollout reduces the early dip but stretches implementation timing.
     </p>
   </div>
 
@@ -1198,14 +1204,15 @@ function updateCarbonTiming(){
    MODULE 3A AND 3B: COST STRUCTURE AND IMPLEMENTATION PACING
    ========================================================= */
 let costCategoryChart=null;
-let implementationPacingChart=null;
+let implementationAnnualChart=null;
+let implementationFundingChart=null;
 
 const module3CostCategories=[
   {label:"Staffing / program management",color:"#ea580c",values:[50000,50000,50000,50000,50000,50000,50000,50000,50000,50000,50000]},
   {label:"Maintenance",color:"#84cc16",values:[0,13500,13500,13500,13500,13500,13500,13500,13500,13500,13500]},
   {label:"Planting",color:"#059669",values:[150000,0,0,0,0,0,0,0,0,0,0]},
-  {label:"Farmer engagement",color:"#2563eb",values:[20000,18000,18000,18000,18000,18000,18000,18000,18000,18000,18000]},
-  {label:"MRV",color:"#7c3aed",values:[12000,0,0,30000,0,0,30000,0,0,30000,0]}
+  {label:"Farmer engagement",color:"#7c3aed",values:[20000,18000,18000,18000,18000,18000,18000,18000,18000,18000,18000]},
+  {label:"MRV",color:"#334155",values:[12000,0,0,30000,0,0,30000,0,0,30000,0]}
 ];
 
 const module3Defaults={rolloutYears:3};
@@ -1298,47 +1305,86 @@ function resetModule3Pacing(){
 }
 
 function updateImplementationPacingChart(){
-  const chartCanvas=document.getElementById("implementationPacingChart");
-  if(!chartCanvas) return;
+  const annualCanvas=document.getElementById("implementationAnnualChart");
+  const fundingCanvas=document.getElementById("implementationFundingChart");
+  if(!annualCanvas || !fundingCanvas) return;
 
   const years=Array.from({length:11},(_,year)=>year);
   const selectedAnnual=implementationAnnualCosts(module3Inputs.rolloutYears);
   const rapidAnnual=implementationAnnualCosts(1);
+  const phasedAnnual=implementationAnnualCosts(5);
   const selectedPressure=fundingPressureSeries(selectedAnnual);
   const rapidPressure=fundingPressureSeries(rapidAnnual);
+  const phasedPressure=fundingPressureSeries(phasedAnnual);
   const rolloutValue=document.getElementById("val-module3-rollout-years");
   if(rolloutValue) rolloutValue.textContent=`${fmtNum(module3Inputs.rolloutYears)} year${module3Inputs.rolloutYears===1?"":"s"}`;
 
-  document.getElementById("implementation-pacing-legend").innerHTML=`
-    <span class="legend-item"><span class="legend-line" style="border-color:#2563eb"></span>Selected rollout: ${module3Inputs.rolloutYears} year${module3Inputs.rolloutYears===1?"":"s"}</span>
-    <span class="legend-item"><span class="legend-line dashed" style="border-color:#0f766e"></span>Rapid rollout reference: 1 year</span>
+  const selectedLabel=`Selected rollout: ${module3Inputs.rolloutYears} year${module3Inputs.rolloutYears===1?"":"s"}`;
+
+  document.getElementById("implementation-annual-legend").innerHTML=`
+    <span class="legend-item"><span class="legend-swatch" style="background:#2563eb"></span>${selectedLabel}</span>
+    <span class="legend-item"><span class="legend-line dashed" style="border-color:#0f766e"></span>Rapid reference: 1 year</span>
+    <span class="legend-item"><span class="legend-line dashed" style="border-color:#64748b"></span>Slow reference: 5 years</span>
   `;
 
-  const data={
+  document.getElementById("implementation-pacing-legend").innerHTML=`
+    <span class="legend-item"><span class="legend-line" style="border-color:#2563eb"></span>${selectedLabel}</span>
+    <span class="legend-item"><span class="legend-line dashed" style="border-color:#0f766e"></span>Rapid reference: 1 year</span>
+    <span class="legend-item"><span class="legend-line dashed" style="border-color:#64748b"></span>Slow reference: 5 years</span>
+  `;
+
+  const annualData={
     labels:years.map(year=>`Year ${year}`),
     datasets:[
-      {type:"line",label:`Selected rollout: ${module3Inputs.rolloutYears} year${module3Inputs.rolloutYears===1?"":"s"}`,data:selectedPressure,borderColor:"#2563eb",backgroundColor:"#2563eb",borderWidth:4,pointRadius:0,tension:.25},
-      {type:"line",label:"Rapid rollout reference",data:rapidPressure,borderColor:"#0f766e",backgroundColor:"#0f766e",borderWidth:3,borderDash:[10,5],pointRadius:0,tension:.25}
+      {type:"bar",label:selectedLabel,data:selectedAnnual,backgroundColor:"#2563eb",borderRadius:6,order:0},
+      {type:"line",label:"Rapid reference",data:rapidAnnual,borderColor:"#0f766e",backgroundColor:"#0f766e",borderWidth:3,borderDash:[10,5],pointRadius:0,tension:.2,order:1},
+      {type:"line",label:"Slow reference",data:phasedAnnual,borderColor:"#64748b",backgroundColor:"#64748b",borderWidth:3,borderDash:[3,5],pointRadius:0,tension:.2,order:2}
     ]
   };
 
-  const options={
+  const fundingData={
+    labels:years.map(year=>`Year ${year}`),
+    datasets:[
+      {type:"line",label:selectedLabel,data:selectedPressure,borderColor:"#2563eb",backgroundColor:"#2563eb",borderWidth:4,pointRadius:0,tension:.2},
+      {type:"line",label:"Rapid reference",data:rapidPressure,borderColor:"#0f766e",backgroundColor:"#0f766e",borderWidth:3,borderDash:[10,5],pointRadius:0,tension:.2},
+      {type:"line",label:"Slow reference",data:phasedPressure,borderColor:"#64748b",backgroundColor:"#64748b",borderWidth:3,borderDash:[3,5],pointRadius:0,tension:.2}
+    ]
+  };
+
+  const sharedPlugins={
+    legend:{display:false},
+    tooltip:{callbacks:{label:function(context){return `${context.dataset.label}: ${fmtMoney(context.raw)}`;}}}
+  };
+
+  const annualOptions={
     responsive:true,
     maintainAspectRatio:false,
     animation:{duration:350},
     interaction:{mode:"index",intersect:false},
-    plugins:{
-      legend:{display:false},
-      tooltip:{callbacks:{label:function(context){return `${context.dataset.label}: ${fmtMoney(context.raw)}`;}}}
-    },
+    plugins:sharedPlugins,
     scales:{
       x:{grid:{color:"#e2e8f0"}},
-      y:{beginAtZero:true,ticks:{callback:(v)=>fmtMoney(v)},grid:{color:"#e2e8f0"},title:{display:true,text:"Cumulative funding pressure"}}
+      y:{beginAtZero:true,ticks:{callback:(v)=>fmtMoney(v)},grid:{color:"#e2e8f0"},title:{display:true,text:"Annual cost outflow"}}
     }
   };
 
-  if(implementationPacingChart) implementationPacingChart.destroy();
-  implementationPacingChart=new Chart(chartCanvas,{data,options});
+  const fundingOptions={
+    responsive:true,
+    maintainAspectRatio:false,
+    animation:{duration:350},
+    interaction:{mode:"index",intersect:false},
+    plugins:sharedPlugins,
+    scales:{
+      x:{grid:{color:"#e2e8f0"}},
+      y:{ticks:{callback:(v)=>fmtMoney(v)},grid:{color:"#e2e8f0"},title:{display:true,text:"Cumulative funding pressure"}}
+    }
+  };
+
+  if(implementationAnnualChart) implementationAnnualChart.destroy();
+  implementationAnnualChart=new Chart(annualCanvas,{data:annualData,options:annualOptions});
+
+  if(implementationFundingChart) implementationFundingChart.destroy();
+  implementationFundingChart=new Chart(fundingCanvas,{data:fundingData,options:fundingOptions});
 }
 
 
