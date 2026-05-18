@@ -346,7 +346,7 @@ The same cumulative line can also be read as a funding requirement. The lowest p
 
 <!-- NEXT STEPS CARD -->
 <div class="card" style="margin:0;">
-<h2>Next steps</h2>
+<h2>What later modules add</h2>
 <ul style="display:grid;grid-template-columns:1fr 1fr;gap:2px 24px;">
 <li>Carbon credit sales</li><li>Cost structure</li><li>Implementation pacing</li><li>Financing structure</li><li>Benefit sharing</li><li>Integrated project view</li>
 </ul>
@@ -784,9 +784,8 @@ Carbon finance models can become extremely complicated very quickly, especially 
 </p>
 
 <p>
-Stage 1A intentionally keeps the model simple by focusing on two core variables:
-<strong>carbon price</strong> and <strong>project length</strong>.
-Most biological and operating assumptions are held constant for now.
+The early modules intentionally keep the model simple by focusing first on carbon price, project length, timing, and basic costs.
+Later modules add simplified financing, grant support, and farmer revenue sharing mechanics.
 </p>
 
 <p>
@@ -1498,91 +1497,6 @@ function resetModule3Pacing(){
   updateCostCategoryChart();
 }
 
-function updateImplementationPacingChart(){
-  const annualCanvas=document.getElementById("implementationAnnualChart");
-  const fundingCanvas=document.getElementById("implementationFundingChart");
-  if(!annualCanvas || !fundingCanvas) return;
-
-  const years=Array.from({length:21},(_,year)=>year);
-  const scenario=module3PacingScenarios[module3Inputs.pacingScenario] || module3PacingScenarios.balanced;
-  const selectedAnnual=implementationAnnualCosts(scenario.years);
-  const selectedNetAnnual=netAnnualCashFlow(selectedAnnual);
-  const year0Need=selectedNetAnnual[0];
-  const peakCashRequired=Math.min(...selectedNetAnnual);
-
-  Object.keys(module3PacingScenarios).forEach(key=>{
-    const button=document.getElementById(`pacing-choice-${key}`);
-    if(button) button.classList.toggle("active",key===module3Inputs.pacingScenario);
-  });
-
-  const nameEl=document.getElementById("module3-pacing-name");
-  const year0El=document.getElementById("module3-year0-need");
-  const totalEl=document.getElementById("module3-total-cost");
-  if(nameEl) nameEl.textContent=`${scenario.label} (${scenario.years} year${scenario.years===1?"":"s"})`;
-  if(year0El) year0El.textContent=fmtMoney(year0Need);
-  if(totalEl) totalEl.textContent=`${scenario.years} years`;
-
-  document.getElementById("implementation-annual-legend").innerHTML=`
-    <span class="legend-item"><span class="legend-swatch" style="background:${scenario.color}"></span>${scenario.label}: annual spending</span>
-  `;
-
-  document.getElementById("implementation-pacing-legend").innerHTML=Object.entries(module3PacingScenarios).map(([key,pacing])=>{
-    const isSelected=key===module3Inputs.pacingScenario;
-    return `<span class="legend-item"><span class="legend-swatch" style="background:${isSelected?pacing.color:"#cbd5e1"}"></span>${pacing.label}${isSelected?" selected":""}</span>`;
-  }).join("");
-
-  const annualData={
-    labels:years.map(year=>`Year ${year}`),
-    datasets:[
-      {
-        type:"bar",
-        label:"Staffing / program management",
-        data:selectedAnnual.map((v,i)=>Math.min(v,50000)),
-        backgroundColor:"#ea580c",
-        stack:"costs"
-      },
-      {
-        type:"bar",
-        label:"Maintenance",
-        data:selectedAnnual.map((v,i)=>i>0?13500:0),
-        backgroundColor:"#84cc16",
-        stack:"costs"
-      },
-      {
-        type:"bar",
-        label:"Planting",
-        data:selectedAnnual.map((v,i)=>{
-          if(i>=scenario.years) return 0;
-          return 150000/scenario.years;
-        }),
-        backgroundColor:"#059669",
-        stack:"costs"
-      },
-      {
-        type:"bar",
-        label:"Farmer engagement",
-        data:selectedAnnual.map((v,i)=>{
-          if(i>=scenario.years) return i>0?18000:0;
-          return (20000/scenario.years)+(i>0?18000:0);
-        }),
-        backgroundColor:"#7c3aed",
-        stack:"costs"
-      },
-      {
-        type:"bar",
-        label:"MRV",
-        data:selectedAnnual.map((v,i)=>{
-          if(i===0) return 12000;
-          return (i===3||i===6||i===9||i===12||i===15||i===18)?30000:0;
-        }),
-        backgroundColor:"#334155",
-        stack:"costs"
-      }
-    ]
-  };
-}
-
-
 /* Build sensitivity table for carbon price and project length combinations */
 function calculateSurplusFor(price,years){
 const saved={...inputs};
@@ -1826,12 +1740,13 @@ function updateModule4FinanceChart(){
 
   const cashFlows=module4CashFlows();
   const unleveredIrr=module4IRR(cashFlows);
-  const unleveredPercent=unleveredIrr===null?0:unleveredIrr*100;
+  const unleveredPercent=unleveredIrr===null?null:unleveredIrr*100;
+  const chartUnleveredPercent=unleveredPercent===null?0:unleveredPercent;
 
   const financingRates=[0,2,4,6,8,10];
 
   const investorReturns=financingRates.map(rate=>{
-    return unleveredPercent + Math.max(0,(unleveredPercent-rate)*0.35);
+    return chartUnleveredPercent + Math.max(0,(chartUnleveredPercent-rate)*0.35);
   });
 
   const statusEl=document.getElementById("module4-status");
@@ -1841,25 +1756,27 @@ function updateModule4FinanceChart(){
     let label="Below commercial range";
     let dot="🔴";
 
-    if(unleveredPercent>=15){
+    if(unleveredPercent!==null && unleveredPercent>=15){
       cls="positive";
       label="Commercially attractive";
       dot="🟢";
-    }else if(unleveredPercent>=8){
+    }else if(unleveredPercent!==null && unleveredPercent>=8){
       cls="near";
       label="Potentially blendable";
       dot="🟡";
     }
 
+    const irrText=unleveredPercent===null?"not calculable":`${fmtNum(unleveredPercent,1)}%`;
+
     statusEl.className=`status ${cls}`;
-    statusEl.innerHTML=`<div class="label">Investor attractiveness</div><div class="status-main">${dot} ${label}</div><p>At ${fmtMoney(module4Inputs.carbonPrice)}/credit, the simplified unlevered project IRR is ${fmtNum(unleveredPercent,1)}%.</p>`;
+    statusEl.innerHTML=`<div class="label">Investor attractiveness</div><div class="status-main">${dot} ${label}</div><p>At ${fmtMoney(module4Inputs.carbonPrice)}/credit, the simplified unlevered project IRR is ${irrText}.</p>`;
   }
 
   const baseCaseEl=document.getElementById("module4-base-case");
   const irrEl=document.getElementById("module4-irr");
 
   if(baseCaseEl) baseCaseEl.textContent=`${fmtMoney(module4Inputs.carbonPrice)}/credit, 20 years`;
-  if(irrEl) irrEl.textContent=`${fmtNum(unleveredPercent,1)}%`;
+  if(irrEl) irrEl.textContent=unleveredPercent===null?"Not calculable":`${fmtNum(unleveredPercent,1)}%`;
 
   document.getElementById("module4-finance-legend").innerHTML=`
     <span class="legend-item"><span class="legend-line" style="border-color:#2563eb"></span>Estimated investor return</span>
